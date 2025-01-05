@@ -1,6 +1,8 @@
 from rest_framework import generics, status
+
+from users.permissions import IsAdmin
 from .models import User
-from .serializers import UserSerializer, UserWithProfileSerializer
+from .serializers import UserCreateSerializer, UserSerializer, UserWithProfileSerializer
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
@@ -10,15 +12,7 @@ from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
-class UserListCreateView(generics.ListCreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [IsAdminUser]
 
-    def get_serializer_class(self):
-        if self.request.query_params.get('nested') == 'true':
-            return UserWithProfileSerializer
-        return UserSerializer
 
 class UserRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
@@ -60,8 +54,19 @@ class UserProfileRetrieveView(generics.RetrieveAPIView):
             return user
         except User.DoesNotExist:
             raise NotFound("User not found.")
+    
         
-        
+class UserListCreateView(generics.ListCreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = [IsAdmin]
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return UserCreateSerializer
+        if self.request.query_params.get('nested') == 'true':
+            return UserWithProfileSerializer
+        return UserSerializer        
+
 
 class MyTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):

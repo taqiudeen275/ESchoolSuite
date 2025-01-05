@@ -2,6 +2,9 @@ from rest_framework import serializers
 from .models import User
 from students.models import Student
 from staff.models import Staff
+from django.db import transaction
+from django.utils import timezone
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,3 +38,77 @@ class StaffUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_picture']
+        
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    role = serializers.ChoiceField(choices=User.Role.choices)
+
+    # Fields for Student and Staff creation
+    date_of_birth = serializers.DateField(required=False, write_only=True)
+    gender = serializers.CharField(required=False, write_only=True)
+    address = serializers.CharField(required=False, write_only=True)
+    city = serializers.CharField(required=False, write_only=True)
+    region = serializers.CharField(required=False, write_only=True)
+    nationality = serializers.CharField(required=False, write_only=True, default='Ghanaian')
+    phone_number = serializers.CharField(required=False, write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'password', 'role', 'first_name', 'last_name', 'profile_picture', 'date_of_birth', 'gender', 'address', 'city', 'region', 'nationality', 'phone_number']
+
+    def create(self, validated_data):
+        role = validated_data.pop('role')  # Remove role from validated_data
+        date_of_birth = validated_data.pop('date_of_birth', None)
+        gender = validated_data.pop('gender', None)
+        address = validated_data.pop('address', None)
+        city = validated_data.pop('city', None)
+        region = validated_data.pop('region', None)
+        nationality = validated_data.pop('nationality', 'Ghanaian')
+        phone_number = validated_data.pop('phone_number', None)
+
+        with transaction.atomic():
+            user = User.objects.create_user(
+                **validated_data,
+                role=role
+            )
+
+            if role == User.Role.STUDENT:
+                student_id = f"S{user.id:04d}"
+                admission_number = f"ADM{user.id:04d}"
+                admission_date = timezone.now().date()
+                student = Student.objects.create(
+                    user=user,
+                    student_id=student_id,
+                    first_name=validated_data.get('first_name'),
+                    last_name=validated_data.get('last_name'),
+                    email=validated_data.get('email'),
+                    admission_number=admission_number,
+                    date_of_birth=date_of_birth,
+                    gender=gender,
+                    address=address,
+                    city=city,
+                    region=region,
+                    nationality=nationality,
+                    phone_number=phone_number,
+                    admission_date=admission_date
+                )
+
+            elif role in [User.Role.TEACHER, User.Role.STAFF, User.Role.ACCOUNTANT, User.Role.LIBRARIAN, User.Role.COUNSELOR]:
+                staff_id = f"ST{user.id:04d}"
+                staff = Staff.objects.create(
+                    user=user,
+                    staff_id=staff_id,
+                    first_name=validated_data.get('first_name'),
+                    last_name=validated_data.get('last_name'),
+                    email=validated_data.get('email'),
+                    date_of_birth=date_of_birth,
+                    gender=gender,
+                    address=address,
+                    city=city,
+                    region=region,
+                    nationality=nationality,
+                    phone_number=phone_number,
+                )
+
+        return user

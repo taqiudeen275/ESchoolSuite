@@ -8,6 +8,7 @@ class StaffSerializer(serializers.ModelSerializer):
     class Meta:
         model = Staff
         fields = '__all__'
+        read_only_fields = ['staff_id']
 
 class StaffBasicInfoSerializer(serializers.ModelSerializer):
     user = StaffUserSerializer(read_only=True)

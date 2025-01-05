@@ -8,6 +8,7 @@ class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = '__all__'
+        read_only_fields = ['student_id', 'admission_number', 'admission_date']
 
 class StudentBasicInfoSerializer(serializers.ModelSerializer):
     user = StudentUserSerializer(read_only=True)
