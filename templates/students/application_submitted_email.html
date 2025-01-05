@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Application Submitted</title>
+</head>
+<body>
+    <h1>Dear {{ application.first_name }} {{ application.last_name }},</h1>
+
+    <p>Thank you for submitting your application to our institution. Your application has been received and is currently under review.</p>
+
+    <p>Application Details:</p>
+    <ul>
+        <li>Application ID: {{ application.id }}</li>
+        <li>Program of Study: {{ application.program_of_study }}</li>
+        <li>Application Date: {{ application.application_date }}</li>
+    </ul>
+
+    <p>We will notify you of the status of your application as soon as possible.</p>
+
+    <p>Sincerely,<br>
+    The Admissions Team</p>
+</body>
+</html>

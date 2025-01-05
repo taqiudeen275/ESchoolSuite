@@ -4,6 +4,7 @@ from users.permissions import IsAdminOrReadOnly
 from .models import AdmissionApplication, Student
 from .serializers import AdmissionApplicationSerializer, StudentSerializer, StudentBasicInfoSerializer
 from rest_framework.response import Response
+from ESchoolSuite.tasks import send_application_submitted_email
 
 class StudentListCreateView(generics.ListCreateAPIView):
     queryset = Student.objects.all()
@@ -36,9 +37,9 @@ class AdmissionApplicationListCreateView(generics.ListCreateAPIView):
         instance = serializer.save()
         # Send email notification (placeholder - to be integrated with Celery)
         print(f"Sending email notification for application {instance.id}...")
-        # send_application_submitted_email(instance) 
+        send_application_submitted_email.delay(instance.id)
 
-class AdmissionApplicationRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyView):
+class AdmissionApplicationRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = AdmissionApplication.objects.all()
     serializer_class = AdmissionApplicationSerializer
     permission_classes = [IsAdminOrReadOnly]
