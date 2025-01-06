@@ -1,5 +1,11 @@
 from rest_framework import generics, status
-
+from .serializers import PasswordResetSerializer, PasswordResetConfirmSerializer
+from celery import shared_task
+from django.conf import settings
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
 from users.permissions import IsAdmin
 from .models import Parent, User
 from .serializers import ParentSerializer, ParentUserSerializer, UserCreateSerializer, UserSerializer, UserWithProfileSerializer
@@ -11,6 +17,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.tokens import default_token_generator
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 
 
 
@@ -40,26 +49,46 @@ class UserProfileRetrieveView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserWithProfileSerializer
     permission_classes = [IsAdminUser]
+    
+    def get_serializer_class(self):
+        if self.request.query_params.get('nested') == 'true':
+            return UserWithProfileSerializer
+        return UserSerializer
 
     def get_object(self):
-        user_id = self.kwargs['pk']
-        try:
-            user = User.objects.get(pk=user_id)
-            if user.role == User.Role.STUDENT:
-                if not hasattr(user, 'student_profile'):
-                    raise NotFound("Student profile not found for this user.")
-            elif user.role in [User.Role.TEACHER, User.Role.STAFF, User.Role.ACCOUNTANT, User.Role.LIBRARIAN, User.Role.COUNSELOR]:
-                if not hasattr(user, 'staff_profile'):
-                    raise NotFound("Staff profile not found for this user.")
-            return user
-        except User.DoesNotExist:
-            raise NotFound("User not found.")
-    
+        # Retrieve the currently authenticated user's profile
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        # Check if the user is trying to update their own profile
+        if instance != request.user:
+            return Response({"detail": "You can only update your own profile."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Prevent users from changing their own role
+        if 'role' in request.data:
+            return Response({"detail": "You cannot change your own role."}, status=status.HTTP_400_BAD_REQUEST)
+
+        partial = kwargs.pop('partial', False)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
         
 class UserListCreateView(generics.ListCreateAPIView):
     queryset = User.objects.all()
     permission_classes = [IsAdmin]
-
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['role', 'email', 'is_active']  # Fields to filter by
+    search_fields = ['username', 'first_name', 'last_name', 'email']  # Fields to search in
+    
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return UserCreateSerializer
@@ -129,3 +158,61 @@ class ParentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.query_params.get('basic') == 'true':
             return ParentUserSerializer
         return ParentSerializer
+    
+    
+
+@shared_task
+def send_password_reset_email(subject, message, from_email, recipient_list):
+    send_mail(subject, message, from_email, recipient_list)
+
+class PasswordResetView(APIView):
+    def post(self, request):
+        serializer = PasswordResetSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"detail": "User with this email does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Generate token and UID
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+        # Build the reset link
+        reset_link = f"{request.build_absolute_uri('/')}api/users/password-reset/confirm/{uid}/{token}/"
+
+        # Render the email template
+        email_subject = 'Password Reset Request'
+        email_body = render_to_string('users/password_reset_email.html', {
+            'user': user,
+            'reset_link': reset_link
+        })
+
+        # Send the email using Celery
+        send_password_reset_email.delay(email_subject, email_body, settings.DEFAULT_FROM_EMAIL, [user.email])
+
+        return Response({"detail": "Password reset email sent."}, status=status.HTTP_200_OK)
+
+class PasswordResetConfirmView(APIView):
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        uid = serializer.validated_data['uid']
+        token = serializer.validated_data['token']
+        new_password = serializer.validated_data['new_password']
+
+        try:
+            user_id = urlsafe_base64_decode(uid).decode()
+            user = User.objects.get(pk=user_id)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({"detail": "Invalid user ID."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({"detail": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)

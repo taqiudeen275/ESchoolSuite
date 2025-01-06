@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ParentListCreateView, ParentRetrieveUpdateDestroyView, UserListCreateView, UserRetrieveUpdateDestroyView, UserProfileRetrieveView,UserProfileRetrieveView, MyTokenObtainPairView, UserRegistrationView, UserLogoutView
+from .views import ParentListCreateView, ParentRetrieveUpdateDestroyView, PasswordResetConfirmView, PasswordResetView, UserListCreateView, UserRetrieveUpdateDestroyView, UserProfileRetrieveView,UserProfileRetrieveView, MyTokenObtainPairView, UserRegistrationView, UserLogoutView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
@@ -12,4 +12,6 @@ urlpatterns = [
     path('logout/', UserLogoutView.as_view(), name='user-logout'),
     path('parents/', ParentListCreateView.as_view(), name='parent-list-create'),
     path('parents/<int:pk>/', ParentRetrieveUpdateDestroyView.as_view(), name='parent-retrieve-update-destroy'),
+    path('password-reset/', PasswordResetView.as_view(), name='password-reset'),
+    path('password-reset/confirm/<str:uid>/<str:token>/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
 ]

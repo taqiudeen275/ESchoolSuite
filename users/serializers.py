@@ -76,7 +76,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'role', 'first_name', 'last_name', 'profile_picture', 'date_of_birth', 'gender', 'address', 'city', 'region', 'nationality', 'phone_number']
+        fields = ['id', 'username', 'email', 'password', 'role', 'first_name', 'last_name', 'profile_picture', 'date_of_birth', 'gender', 'address', 'city', 'region', 'nationality', 'phone_number', 'is_active', 'is_staff', 'is_superuser']
 
     def create(self, validated_data):
         role = validated_data.pop('role')  # Remove role from validated_data
@@ -143,4 +143,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
         return user
     
-    
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)

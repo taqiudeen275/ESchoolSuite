@@ -5,11 +5,16 @@ from .models import AdmissionApplication, Student
 from .serializers import AdmissionApplicationSerializer, StudentSerializer, StudentBasicInfoSerializer
 from rest_framework.response import Response
 from ESchoolSuite.tasks import send_application_submitted_email
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 
 class StudentListCreateView(generics.ListCreateAPIView):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
     permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['gender', 'region', 'admission_number', 'parent__user__email', 'parent__phone_number', 'parent__first_name', 'parent__last_name', 'parent__middle_name', 'parent__occupation']
+    search_fields = ['first_name', 'last_name', 'student_id', 'email', 'phone_number', 'admission_number']
     
     def get_serializer_class(self):
         if self.request.query_params.get('basic') == 'true':
