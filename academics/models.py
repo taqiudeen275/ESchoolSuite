@@ -88,26 +88,7 @@ class Attendance(models.Model):
     def __str__(self):
         return f"{self.student} - {self.class_session} - {self.date} - {self.status}"
     
-    
-
-class GradingScale(models.Model):
-    class Level(models.TextChoices):
-        PRIMARY = 'PRIMARY', 'Primary'
-        JHS = 'JHS', 'Junior High School'
-        SHS = 'SHS', 'Senior High School'
-        UNIVERSITY = 'UNIVERSITY', 'University'
-
-    name = models.CharField(max_length=50)  # e.g., "BECE", "WASSCE", "University of Ghana - 4.0 Scale"
-    level = models.CharField(max_length=20, choices=Level.choices)  # Educational level
-    grades = models.JSONField()  # Store grades and their meanings as JSON
-    # Add a field to indicate if the scale is currently active or not
-    is_active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return f"{self.name} ({self.level})"
-    
-
-
+   
 class GradeComponent(models.Model):
     class ComponentType(models.TextChoices):
         QUIZ = 'QUIZ', 'Quiz'

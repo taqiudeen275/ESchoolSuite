@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     "users",
     "students",
     "staff",
-    "academics",
+    "academics.apps.AcademicsConfig",
     
     'rest_framework',
     'rest_framework_simplejwt',
