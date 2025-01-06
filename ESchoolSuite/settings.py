@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     "students",
     "staff",
     "academics.apps.AcademicsConfig",
+    'fees',
+    "communications",
     
     'rest_framework',
     'rest_framework_simplejwt',
