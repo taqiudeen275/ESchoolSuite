@@ -1,5 +1,15 @@
 from django.urls import path
-from .views import AvailableCoursesList, CourseListCreateView, CourseRetrieveUpdateDestroyView, ClassListCreateView, ClassRetrieveUpdateDestroyView, EnrollmentListCreateView, EnrollmentRetrieveDestroyView, StudentEnrollmentListCreateView, StudentEnrollmentRetrieveDestroyView
+from .views import (AvailableCoursesList, CourseListCreateView,
+                    CourseRetrieveUpdateDestroyView, ClassListCreateView,
+                    ClassRetrieveUpdateDestroyView, EnrollmentListCreateView,
+                    EnrollmentRetrieveDestroyView, ParentAttendanceListView,
+                    StudentAttendanceListView, StudentEnrollmentListCreateView,
+                    StudentEnrollmentRetrieveDestroyView, TeacherAttendanceCreateListView,
+                    TeacherGradeCreateListView, StudentGradeListView, ParentGradeListView,
+                    GradingScaleListCreateView, GradingScaleRetrieveUpdateDestroyView,
+                    GradeComponentListCreateView, GradeComponentRetrieveUpdateDestroyView,
+                    ScoreListCreateView, ScoreRetrieveUpdateDestroyView,
+                    )
 
 urlpatterns = [
     path('courses/', CourseListCreateView.as_view(), name='course-list-create'),
@@ -8,7 +18,19 @@ urlpatterns = [
     path('classes/<int:pk>/', ClassRetrieveUpdateDestroyView.as_view(), name='class-retrieve-update-destroy'),
     path('enrollments/', EnrollmentListCreateView.as_view(), name='enrollment-list-create'),
     path('enrollments/<int:pk>/', EnrollmentRetrieveDestroyView.as_view(), name='enrollment-retrieve-destroy'),
-     path("student/enrollments/", StudentEnrollmentListCreateView.as_view(), name="student-enrollment-list-create"),
+    path("student/enrollments/", StudentEnrollmentListCreateView.as_view(), name="student-enrollment-list-create"),
     path("student/enrollments/<int:pk>/", StudentEnrollmentRetrieveDestroyView.as_view(), name="student-enrollment-detail"),
     path("courses/available/", AvailableCoursesList.as_view(), name="available-courses-list"),
+    path('attendance/teacher/', TeacherAttendanceCreateListView.as_view(), name='teacher-attendance'),
+    path('attendance/student/', StudentAttendanceListView.as_view(), name='student-attendance'),
+    path('attendance/parent/', ParentAttendanceListView.as_view(), name='parent-attendance'),
+    path("grades/teacher/", TeacherGradeCreateListView.as_view(), name="teacher-grades"),
+    path("grades/student/", StudentGradeListView.as_view(), name="student-grades"),
+    path("grades/parent/", ParentGradeListView.as_view(), name="parent-grades"),
+    path("grading-scales/", GradingScaleListCreateView.as_view(), name="grading-scale-list-create"),
+    path("grading-scales/<int:pk>/", GradingScaleRetrieveUpdateDestroyView.as_view(), name="grading-scale-detail"),
+    path("grade-components/", GradeComponentListCreateView.as_view(), name="grade-component-list-create"),
+    path("grade-components/<int:pk>/", GradeComponentRetrieveUpdateDestroyView.as_view(), name="grade-component-detail"),
+    path("scores/", ScoreListCreateView.as_view(), name="score-list-create"),
+    path("scores/<int:pk>/", ScoreRetrieveUpdateDestroyView.as_view(), name="score-detail"),
 ]
