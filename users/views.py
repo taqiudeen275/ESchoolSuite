@@ -9,7 +9,7 @@ from django.utils.encoding import force_bytes
 from users.permissions import IsAdmin
 from .models import Parent, User
 from .serializers import ParentSerializer, ParentUserSerializer, UserCreateSerializer, UserSerializer, UserWithProfileSerializer
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser,IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -45,6 +45,41 @@ class UserRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+class CurrentUserProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.query_params.get('nested') == 'true':
+            return UserWithProfileSerializer
+        return UserSerializer
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        # Check if the user is trying to update their own profile
+        if instance != request.user:
+            return Response({"detail": "You can only update your own profile."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Prevent users from changing their own role
+        if 'role' in request.data:
+            return Response({"detail": "You cannot change your own role."}, status=status.HTTP_400_BAD_REQUEST)
+
+        partial = kwargs.pop('partial', False)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
 class UserProfileRetrieveView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserWithProfileSerializer
@@ -56,8 +91,18 @@ class UserProfileRetrieveView(generics.RetrieveAPIView):
         return UserSerializer
 
     def get_object(self):
-        # Retrieve the currently authenticated user's profile
-        return self.request.user
+        user_id = self.kwargs['pk']
+        try:
+            user = User.objects.get(pk=user_id)
+            if user.role == User.Role.STUDENT:
+                if not hasattr(user, 'student_profile'):
+                    raise NotFound("Student profile not found for this user.")
+            elif user.role in [User.Role.TEACHER, User.Role.STAFF, User.Role.ACCOUNTANT, User.Role.LIBRARIAN, User.Role.COUNSELOR]:
+                if not hasattr(user, 'staff_profile'):
+                    raise NotFound("Staff profile not found for this user.")
+            return user
+        except User.DoesNotExist:
+            raise NotFound("User not found.")
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
