@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     "academics.apps.AcademicsConfig",
     'fees',
     "communications",
+    "accountants",
+    "counselors",
+    'librarians',
     
     'rest_framework',
     'rest_framework_simplejwt',

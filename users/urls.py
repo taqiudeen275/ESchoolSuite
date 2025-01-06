@@ -1,4 +1,6 @@
-from django.urls import path
+from django.urls import include, path
+
+from fees.views import ParentPaymentHistoryView, ParentUnpaidFeesView
 from .views import (CurrentUserProfileView, ParentListCreateView, 
                     ParentRetrieveUpdateDestroyView, PasswordResetConfirmView, 
                     PasswordResetView, UserListCreateView, UserRetrieveUpdateDestroyView,
@@ -31,4 +33,8 @@ urlpatterns = [
     path("parent/children/<int:student_id>/attendance/", ParentChildAttendanceListView.as_view(), name="parent-child-attendance"),
     path("parent/children/<int:student_id>/assignments/", ParentChildAssignmentsListView.as_view(), name="parent-child-assignments"),
     path("parent/children/<int:student_id>/classes/", ParentChildClassesListView.as_view(), name="parent-child-classes"),
+     path("parent/children/<int:student_id>/unpaid-fees/", ParentUnpaidFeesView.as_view(), name="parent-unpaid-fees"),
+    path('parent/payments/', ParentPaymentHistoryView.as_view(), name='parent-payment-history'),
+     path("parent/children/<int:student_id>/fees/", include('fees.urls')),
+
 ]
