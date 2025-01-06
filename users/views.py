@@ -1,8 +1,8 @@
 from rest_framework import generics, status
 
 from users.permissions import IsAdmin
-from .models import User
-from .serializers import UserCreateSerializer, UserSerializer, UserWithProfileSerializer
+from .models import Parent, User
+from .serializers import ParentSerializer, ParentUserSerializer, UserCreateSerializer, UserSerializer, UserWithProfileSerializer
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
@@ -107,3 +107,25 @@ class UserLogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+class ParentListCreateView(generics.ListCreateAPIView):
+    queryset = Parent.objects.all()
+    serializer_class = ParentSerializer
+    permission_classes = [IsAdmin]
+
+    def get_serializer_class(self):
+        if self.request.query_params.get('basic') == 'true':
+            return ParentUserSerializer
+        return ParentSerializer
+
+class ParentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Parent.objects.all()
+    serializer_class = ParentSerializer
+    permission_classes = [IsAdmin]
+
+    def get_serializer_class(self):
+        if self.request.query_params.get('basic') == 'true':
+            return ParentUserSerializer
+        return ParentSerializer

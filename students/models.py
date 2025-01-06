@@ -1,6 +1,6 @@
 import os
 from django.db import models
-from users.models import User
+from users.models import Parent, User
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
@@ -36,6 +36,7 @@ class Student(models.Model):
     # add fields for religion and denomination
     religion = models.CharField(max_length=50, blank=True, null=True)
     denomination = models.CharField(max_length=50, blank=True, null=True)
+    parent = models.ForeignKey(Parent, on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"

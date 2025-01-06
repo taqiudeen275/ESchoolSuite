@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserListCreateView, UserRetrieveUpdateDestroyView, UserProfileRetrieveView,UserProfileRetrieveView, MyTokenObtainPairView, UserRegistrationView, UserLogoutView
+from .views import ParentListCreateView, ParentRetrieveUpdateDestroyView, UserListCreateView, UserRetrieveUpdateDestroyView, UserProfileRetrieveView,UserProfileRetrieveView, MyTokenObtainPairView, UserRegistrationView, UserLogoutView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
@@ -10,4 +10,6 @@ urlpatterns = [
     path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('register/', UserRegistrationView.as_view(), name='user-register'),
     path('logout/', UserLogoutView.as_view(), name='user-logout'),
+    path('parents/', ParentListCreateView.as_view(), name='parent-list-create'),
+    path('parents/<int:pk>/', ParentRetrieveUpdateDestroyView.as_view(), name='parent-retrieve-update-destroy'),
 ]

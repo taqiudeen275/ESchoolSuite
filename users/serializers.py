@@ -1,9 +1,28 @@
 from rest_framework import serializers
-from .models import User
+from .models import Parent, User
 from students.models import Student
 from staff.models import Staff
 from django.db import transaction
 from django.utils import timezone
+
+
+
+
+class ParentSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    class Meta:
+        model = Parent
+        fields = '__all__'
+
+class ParentUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_picture']
+
+class UserParentProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Parent
+        fields = ['first_name', 'last_name', 'middle_name', 'occupation', 'email', 'phone_number', 'address', 'place_of_work']
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -24,10 +43,12 @@ class UserStaffProfileSerializer(serializers.ModelSerializer):
 class UserWithProfileSerializer(serializers.ModelSerializer):
     student_profile = UserStudentProfileSerializer(read_only=True)
     staff_profile = UserStaffProfileSerializer(read_only=True)
+    parent_profile = UserParentProfileSerializer(read_only=True)
+
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role', 'first_name', 'last_name', 'profile_picture', 'student_profile', 'staff_profile']
+        fields = ['id', 'username', 'email', 'role', 'first_name', 'last_name', 'profile_picture', 'student_profile', 'staff_profile', 'parent_profile']
 
 class StudentUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -110,5 +131,16 @@ class UserCreateSerializer(serializers.ModelSerializer):
                     nationality=nationality,
                     phone_number=phone_number,
                 )
+                
+            elif role == User.Role.PARENT:
+                parent = Parent.objects.create(
+                    user=user,
+                    first_name=validated_data.get('first_name'),
+                    last_name=validated_data.get('last_name'),
+                    email=validated_data.get('email'),
+                    phone_number=validated_data.get('phone_number'),
+                )
 
         return user
+    
+    
