@@ -4,8 +4,8 @@ from rest_framework.exceptions import ValidationError
 from academics.permissions import IsStudentEnrolled
 from users.models import User
 from users.permissions import IsAdminOrReadOnly, IsAdmin, IsParent, IsStudent, IsTeacher
-from .models import Attendance, Course, Class, Enrollment, Grade, GradeComponent, GradingScale, Score
-from .serializers import AttendanceSerializer, CourseSerializer, ClassSerializer, EnrollmentSerializer, GradeComponentSerializer, GradeSerializer, GradingScaleSerializer, ScoreSerializer
+from .models import Assignment, Attendance, Course, Class, Enrollment, Grade, GradeComponent, GradingScale, LessonPlan, Score
+from .serializers import AssignmentSerializer, AttendanceSerializer, CourseSerializer, ClassSerializer, EnrollmentSerializer, GradeComponentSerializer, GradeSerializer, GradingScaleSerializer, LessonPlanSerializer, ScoreSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework.permissions import IsAuthenticated
@@ -341,3 +341,48 @@ class ParentGradeListView(generics.ListAPIView):
     def get_queryset(self):
         parent = self.request.user.parent_profile
         return Grade.objects.filter(student__parent=parent)
+    
+
+class TeacherLesssonPlanListCreateView(generics.ListCreateAPIView):
+    serializer_class = LessonPlanSerializer
+    permission_classes = [IsTeacher]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['course', 'date', 'is_approved']
+    search_fields = ['title', 'course__name']
+
+    def get_queryset(self):
+        teacher = self.request.user.staff_profile
+        return LessonPlan.objects.filter(teacher=teacher)
+
+    def perform_create(self, serializer):
+        serializer.save(teacher=self.request.user.staff_profile)
+
+class TeacherLesssonPlanRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = LessonPlanSerializer
+    permission_classes = [IsTeacher]
+
+    def get_queryset(self):
+        teacher = self.request.user.staff_profile
+        return LessonPlan.objects.filter(teacher=teacher)
+
+class TeacherAssignmentListCreateView(generics.ListCreateAPIView):
+    serializer_class = AssignmentSerializer
+    permission_classes = [IsTeacher]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['course', 'due_date']
+    search_fields = ['title', 'course__name']
+
+    def get_queryset(self):
+        teacher = self.request.user.staff_profile
+        return Assignment.objects.filter(teacher=teacher)
+
+    def perform_create(self, serializer):
+        serializer.save(teacher=self.request.user.staff_profile)
+
+class TeacherAssignmentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = AssignmentSerializer
+    permission_classes = [IsTeacher]
+
+    def get_queryset(self):
+        teacher = self.request.user.staff_profile
+        return Assignment.objects.filter(teacher=teacher)

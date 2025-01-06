@@ -9,6 +9,8 @@ from .views import (AvailableCoursesList, CourseListCreateView,
                     GradingScaleListCreateView, GradingScaleRetrieveUpdateDestroyView,
                     GradeComponentListCreateView, GradeComponentRetrieveUpdateDestroyView,
                     ScoreListCreateView, ScoreRetrieveUpdateDestroyView,
+                    TeacherLesssonPlanListCreateView, TeacherLesssonPlanRetrieveUpdateDestroyView,
+                    TeacherAssignmentListCreateView, TeacherAssignmentRetrieveUpdateDestroyView
                     )
 
 urlpatterns = [
@@ -33,4 +35,8 @@ urlpatterns = [
     path("grade-components/<int:pk>/", GradeComponentRetrieveUpdateDestroyView.as_view(), name="grade-component-detail"),
     path("scores/", ScoreListCreateView.as_view(), name="score-list-create"),
     path("scores/<int:pk>/", ScoreRetrieveUpdateDestroyView.as_view(), name="score-detail"),
+    path('lesson-plans/teacher/', TeacherLesssonPlanListCreateView.as_view(), name='teacher-lesson-plans'),
+    path('lesson-plans/teacher/<int:pk>/', TeacherLesssonPlanRetrieveUpdateDestroyView.as_view(), name='teacher-lesson-plan-detail'),
+    path('assignments/teacher/', TeacherAssignmentListCreateView.as_view(), name='teacher-assignments'),
+    path('assignments/teacher/<int:pk>/', TeacherAssignmentRetrieveUpdateDestroyView.as_view(), name='teacher-assignment-detail'),
 ]

@@ -207,3 +207,35 @@ class Grade(models.Model):
                     self.letter_grade = letter
                     break
         super().save(*args, **kwargs)
+        
+        
+
+class LessonPlan(models.Model):
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lesson_plans', limit_choices_to={'role': User.Role.TEACHER})
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lesson_plans')
+    class_taught = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='lesson_plans', null=True, blank=True)
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    is_approved = models.BooleanField(default=False)  # Optional: Add approval workflow
+
+    class Meta:
+        unique_together = ('teacher', 'course', 'date')
+
+    def __str__(self):
+        return f"{self.teacher.get_full_name()} - {self.course.name} - {self.title}"
+
+class Assignment(models.Model):
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assignments', limit_choices_to={'role': User.Role.TEACHER})
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='assignments')
+    class_assigned = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='assignments', null=True, blank=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    due_date = models.DateField()
+    max_score = models.DecimalField(max_digits=5, decimal_places=2, default=100.00)
+    # Optional: Add file uploads, etc.
+
+    def __str__(self):
+        return f"{self.teacher.get_full_name()} - {self.course.name} - {self.title}"

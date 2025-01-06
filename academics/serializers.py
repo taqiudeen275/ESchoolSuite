@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from users.models import User
-from .models import Attendance, Course, Class, Enrollment, Grade, GradeComponent, GradingScale, Score
+from .models import Assignment, Attendance, Course, Class, Enrollment, Grade, GradeComponent, GradingScale, LessonPlan, Score
 from users.serializers import UserSerializer
 
 
@@ -101,3 +101,26 @@ class GradeSerializer(serializers.ModelSerializer):
         grade = Grade.objects.create(**validated_data)
 
         return grade
+
+
+
+class LessonPlanSerializer(serializers.ModelSerializer):
+    teacher = serializers.StringRelatedField()
+    course = serializers.StringRelatedField()
+    class_taught = serializers.StringRelatedField()
+
+    class Meta:
+        model = LessonPlan
+        fields = '__all__'
+
+class AssignmentSerializer(serializers.ModelSerializer):
+    teacher = serializers.StringRelatedField()
+    course = serializers.StringRelatedField()
+    class_assigned = serializers.StringRelatedField()
+
+    class Meta:
+        model = Assignment
+        fields = '__all__'
+        
+        
+        

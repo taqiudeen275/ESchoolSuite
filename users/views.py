@@ -1,4 +1,7 @@
 from rest_framework import generics, status
+
+from students.models import Student
+from students.serializers import StudentSerializer
 from .serializers import PasswordResetSerializer, PasswordResetConfirmSerializer
 from celery import shared_task
 from django.conf import settings
@@ -6,7 +9,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
-from users.permissions import IsAdmin
+from users.permissions import IsAdmin, IsParent
 from .models import Parent, User
 from .serializers import ParentSerializer, ParentUserSerializer, UserCreateSerializer, UserSerializer, UserWithProfileSerializer
 from rest_framework.permissions import IsAdminUser,IsAuthenticated
@@ -20,6 +23,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from academics.models import Enrollment, Grade, Attendance, Assignment, Class
+from academics.serializers import EnrollmentSerializer, GradeSerializer, AttendanceSerializer, AssignmentSerializer, ClassSerializer
 
 
 
@@ -261,3 +266,83 @@ class PasswordResetConfirmView(APIView):
         user.save()
 
         return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)
+    
+    
+
+class ParentChildrenListView(generics.ListAPIView):
+    serializer_class = StudentSerializer
+    permission_classes = [IsParent]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ['first_name', 'last_name']
+
+    def get_queryset(self):
+        parent = self.request.user.parent_profile
+        return Student.objects.filter(parent=parent)
+
+class ParentChildDetailView(generics.RetrieveAPIView):
+    serializer_class = StudentSerializer
+    permission_classes = [IsParent]
+
+    def get_queryset(self):
+        parent = self.request.user.parent_profile
+        return Student.objects.filter(parent=parent)
+
+class ParentChildEnrollmentsListView(generics.ListAPIView):
+    serializer_class = EnrollmentSerializer
+    permission_classes = [IsParent]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['course', 'class_enrolled']
+    search_fields = ['course__name', 'class_enrolled__name']
+
+    def get_queryset(self):
+        parent = self.request.user.parent_profile
+        student_id = self.kwargs.get('student_id')  # Get student ID from URL
+        return Enrollment.objects.filter(student__parent=parent, student_id=student_id)
+
+class ParentChildGradesListView(generics.ListAPIView):
+    serializer_class = GradeSerializer
+    permission_classes = [IsParent]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['course']
+    search_fields = ['course__name']
+
+    def get_queryset(self):
+        parent = self.request.user.parent_profile
+        student_id = self.kwargs.get('student_id')
+        return Grade.objects.filter(student__parent=parent, student_id=student_id)
+
+class ParentChildAttendanceListView(generics.ListAPIView):
+    serializer_class = AttendanceSerializer
+    permission_classes = [IsParent]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['class_session', 'date', 'status']
+    search_fields = ['class_session__name', 'date']
+
+    def get_queryset(self):
+        parent = self.request.user.parent_profile
+        student_id = self.kwargs.get('student_id')
+        return Attendance.objects.filter(student__parent=parent, student_id=student_id)
+
+class ParentChildAssignmentsListView(generics.ListAPIView):
+    serializer_class = AssignmentSerializer
+    permission_classes = [IsParent]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['course', 'due_date']
+    search_fields = ['title', 'course__name']
+
+    def get_queryset(self):
+        parent = self.request.user.parent_profile
+        student_id = self.kwargs.get('student_id')
+        return Assignment.objects.filter(course__classes__enrollments__student__parent=parent, course__classes__enrollments__student_id=student_id).distinct()
+
+class ParentChildClassesListView(generics.ListAPIView):
+    serializer_class = ClassSerializer
+    permission_classes = [IsParent]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['name', 'academic_year', 'courses', 'start_time', 'end_time']
+    search_fields = ['name', 'academic_year', 'courses__name']
+
+    def get_queryset(self):
+        parent = self.request.user.parent_profile
+        student_id = self.kwargs.get('student_id')  # Get student ID from URL
+        return Class.objects.filter(enrollments__student__parent=parent, enrollments__student_id=student_id).distinct()
