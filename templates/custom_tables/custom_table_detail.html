@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>{{ custom_table.name }}</h2>
+<p>{{ custom_table.description }}</p>
+
+<h3>Fields</h3>
+<a href="{% url 'custom_field_form' custom_table.id %}">Add Field</a>
+<ul>
+    {% for field in fields %}
+    <li>
+        {{ field.name }} ({{ field.data_type }})
+        {% if field.choices %}
+            - Choices: {{ field.choices|join:", " }}
+        {% endif %}
+        - Required: {{ field.required }}
+    </li>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'custom_tables_list' %}">Back to Custom Tables</a>
+{% endblock %}

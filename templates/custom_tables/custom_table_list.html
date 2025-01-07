@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Custom Tables</h2>
+<a href="{% url 'custom_table_form' %}">Create New Table</a>
+<ul>
+    {% for table in custom_tables %}
+    <li>
+        <a href="{% url 'custom_table_detail' table.id %}">{{ table.name }}</a>
+        - {{ table.description }}
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

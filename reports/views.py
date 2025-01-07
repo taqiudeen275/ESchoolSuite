@@ -1,18 +1,20 @@
+from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.permissions import IsAdminUser
 from students.models import Student
 from academics.models import Grade, Attendance, Enrollment, Course, Class
 from staff.models import Staff
 from fees.models import Fee, Payment
+from users.permissions import IsAdmin
 from .serializers import GradeReportSerializer, AttendanceReportSerializer, EnrollmentReportSerializer, FeeReportSerializer, PaymentReportSerializer, StudentReportSerializer, StaffReportSerializer, CourseReportSerializer, ClassReportSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from django.http import HttpResponse
 import csv
 from rest_framework.response import Response
 from rest_framework import status
-
+import requests
 
 class StudentPerformanceReportView(generics.ListAPIView):
     serializer_class = GradeReportSerializer
@@ -114,6 +116,7 @@ class StaffReportView(generics.ListAPIView):
     
 
 @api_view(['GET', 'POST'])
+@permission_classes([IsAdmin])
 def custom_report(request):
     # Allowed fields for the report
     allowed_fields = {
@@ -183,3 +186,55 @@ def custom_report(request):
             writer.writerow(row)
 
         return response
+    
+    
+    
+def student_performance_report(request):
+    response = requests.get('http://127.0.0.1:8000/api/reports/student-performance/', params=request.GET)
+    report_data = response.json()
+    return render(request, 'reports/student_performance_report.html', {'report_data': report_data})
+
+def attendance_report(request):
+    response = requests.get('http://127.0.0.1:8000/api/reports/attendance/', params=request.GET)
+    report_data = response.json()
+    return render(request, 'reports/attendance_report.html', {'report_data': report_data})
+
+def enrollment_report(request):
+    response = requests.get('http://127.0.0.1:8000/api/reports/enrollment/', params=request.GET)
+    report_data = response.json()
+    return render(request, 'reports/enrollment_report.html', {'report_data': report_data})
+
+def financial_report(request):
+    response = requests.get('http://127.0.0.1:8000/api/reports/financial/', params=request.GET)
+    report_data = response.json()
+    return render(request, 'reports/financial_report.html', {'report_data': report_data})
+
+def fees_report(request):
+    response = requests.get('http://127.0.0.1:8000/api/reports/fees/', params=request.GET)
+    report_data = response.json()
+    return render(request, 'reports/fees_report.html', {'report_data': report_data})
+
+def payments_report(request):
+    response = requests.get('http://127.0.0.1:8000/api/reports/payments/', params=request.GET)
+    report_data = response.json()
+    return render(request, 'reports/payments_report.html', {'report_data': report_data})
+
+def student_report(request):
+    response = requests.get('http://127.0.0.1:8000/api/reports/students/', params=request.GET)
+    report_data = response.json()
+    return render(request, 'reports/student_report.html', {'report_data': report_data})
+
+def staff_report(request):
+    response = requests.get('http://127.0.0.1:8000/api/reports/staff/', params=request.GET)
+    report_data = response.json()
+    return render(request, 'reports/staff_report.html', {'report_data': report_data})
+
+def course_report(request):
+    response = requests.get('http://127.0.0.1:8000/api/reports/courses/', params=request.GET)
+    report_data = response.json()
+    return render(request, 'reports/course_report.html', {'report_data': report_data})
+
+def class_report(request):
+    response = requests.get('http://127.0.0.1:8000/api/reports/classes/', params=request.GET)
+    report_data = response.json()
+    return render(request, 'reports/class_report.html', {'report_data': report_data})

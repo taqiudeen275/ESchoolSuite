@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Custom Report</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <div>
+        <label for="model">Model:</label>
+        <select id="model" name="model">
+            <option value="students">Students</option>
+            <option value="staff">Staff</option>
+            <option value="courses">Courses</option>
+            <option value="classes">Classes</option>
+            <option value="enrollments">Enrollments</option>
+            <option value="attendance">Attendance</option>
+            <option value="grades">Grades</option>
+            <option value="fees">Fees</option>
+            <option value="payments">Payments</option>
+        </select>
+    </div>
+    <div>
+        <label for="fields">Fields:</label>
+        <select id="fields" name="fields" multiple>
+            </select>
+    </div>
+    <div>
+        <label for="filters">Filters:</label>
+        <input type="text" id="filters" name="filters">
+    </div>
+    <button type="submit">Generate Report</button>
+</form>
+
+<script>
+    const modelSelect = document.getElementById('model');
+    const fieldsSelect = document.getElementById('fields');
+    const allowedFields = {
+        'students': ['first_name', 'last_name', 'email', 'phone_number', 'address', 'city', 'region', 'student_id'],
+        'staff': ['first_name', 'last_name', 'email', 'phone_number', 'staff_id'],
+        'courses': ['name', 'code', 'description', 'credit_hours'],
+        'classes': ['name', 'academic_year', 'start_time', 'end_time', 'room'],
+        'enrollments': ['enrollment_date'],
+        'attendance': ['date', 'status', 'remark'],
+        'grades': ['final_grade', 'letter_grade'],
+        'fees': ['name', 'amount', 'due_date'],
+        'payments': ['amount_paid', 'payment_date', 'status'],
+    };
+
+    modelSelect.addEventListener('change', (event) => {
+        const selectedModel = event.target.value;
+        const fields = allowedFields[selectedModel];
+
+        // Clear existing options
+        fieldsSelect.innerHTML = '';
+
+        // Add new options
+        fields.forEach((field) => {
+            const option = document.createElement('option');
+            option.value = field;
+            option.text = field;
+            fieldsSelect.add(option);
+        });
+    });
+</script>
+{% endblock %}

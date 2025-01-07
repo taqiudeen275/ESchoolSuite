@@ -1,3 +1,5 @@
+from django.shortcuts import render
+import requests
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,6 +9,7 @@ from academics.models import Attendance, Enrollment
 from fees.models import Fee, Payment
 from django.db.models import Sum, Count
 from users.permissions import IsAdmin
+
 
 @api_view(['GET'])
 @permission_classes([IsAdmin])
@@ -39,3 +42,16 @@ def calculate_attendance_rate():
         return 0  # Avoid division by zero
     present_count = Attendance.objects.filter(status='PRESENT').count()
     return (present_count / total_attendance_records) * 100
+
+
+
+def admin_dashboard(request):
+    # Fetch the data from the dashboard_data API endpoint
+    response = requests.get('http://127.0.0.1:8000/api/dashboard/')  # Replace with your actual API endpoint URL
+    
+    if response.status_code == 200:
+        dashboard_data = response.json()
+    else:
+        dashboard_data = {}
+
+    return render(request, 'dashboard/dashboard.html', {'dashboard_data': dashboard_data})

@@ -33,6 +33,8 @@ urlpatterns = [
     path('api/librarians/', include('librarians.urls')),
     path('api/dashboard/', include('dashboard.urls')),
     path('api/reports/', include('reports.urls')),
+    path('api/custom_tables/', include('custom_tables.urls')),
+    
      
     
        # Swagger documentation URLs

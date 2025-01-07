@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'librarians',
     'reports',
     'dashboard',
+    "custom_tables",
     # Third Party Apps
     'rest_framework',
     'rest_framework_simplejwt',

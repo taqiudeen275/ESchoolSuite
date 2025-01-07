@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+    <div>
+        <h2>Key Metrics</h2>
+        <ul>
+            <li>Total Students: {{ dashboard_data.total_students }}</li>
+            <li>Total Staff: {{ dashboard_data.total_staff }}</li>
+            <li>Total Enrollments: {{ dashboard_data.total_enrollments }}</li>
+            <li>Total Fees: {{ dashboard_data.total_fees }}</li>
+            <li>Total Payments: {{ dashboard_data.total_payments }}</li>
+            <li>Total Outstanding Fees: {{ dashboard_data.total_outstanding_fees }}</li>
+            <li>Attendance Rate: {{ dashboard_data.attendance_rate }}%</li>
+        </ul>
+    </div>
+</body>
+</html>
