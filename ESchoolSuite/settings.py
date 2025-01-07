@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+    # My Apps
     "users",
     "students",
     "staff",
@@ -47,7 +47,9 @@ INSTALLED_APPS = [
     "accountants",
     "counselors",
     'librarians',
-    
+    'reports',
+    'dashboard',
+    # Third Party Apps
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
