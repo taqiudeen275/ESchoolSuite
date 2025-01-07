@@ -199,6 +199,3 @@ Here are some examples:
 *   The `Score` examples demonstrate how individual student scores are recorded for specific components.
 *   The `Grade` example shows the calculated final grade and the corresponding letter grade based on the defined grading scale.
 
-**Note:** This is just a sample data set to illustrate the concept. In a real application, you would likely have many more grading scales, courses, components, and scores. Also, remember that the calculation of `final_grade` and `letter_grade` happens automatically in the backend whenever relevant scores are created or updated.
-
-I hope these examples clarify how the models work together! Let me know if you have any more questions.
