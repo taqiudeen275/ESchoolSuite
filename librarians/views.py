@@ -55,6 +55,9 @@ class BorrowingRecordRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPI
 class OverdueBookListView(generics.ListAPIView):
     serializer_class = BorrowingRecordSerializer
     permission_classes = [IsLibrarian]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['book', 'student', 'staff', 'status']
+    search_fields = ['book__title', 'student__user__first_name', 'student__user__last_name', 'staff__user__first_name', 'staff__user__last_name']
 
     def get_queryset(self):
         today = timezone.now().date()

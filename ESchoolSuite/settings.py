@@ -45,14 +45,17 @@ INSTALLED_APPS = [
     "students",
     "staff",
     "academics.apps.AcademicsConfig",
-    'fees',
-    "communications",
-    "accountants",
-    "counselors",
-    'librarians',
-    'reports',
-    'dashboard',
-    "custom_tables",
+     'reports.apps.ReportsConfig',
+    'dashboard.apps.DashboardConfig',
+    'communications.apps.CommunicationsConfig',
+    'accountants.apps.AccountantsConfig',
+    'counselors.apps.CounselorsConfig',
+    'librarians.apps.LibrariansConfig',
+    'fees.apps.FeesConfig',
+    'custom_tables.apps.CustomTablesConfig',
+
+    
+    
     # Third Party Apps
     'rest_framework',
     'rest_framework_simplejwt',

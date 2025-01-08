@@ -11,4 +11,5 @@ urlpatterns = [
     path('students/<int:pk>/', CounselorStudentDetailView.as_view(), name='counselor-student-detail'),
     path('sessions/', CounselingSessionListCreateView.as_view(), name='counseling-session-list-create'),
     path('sessions/<int:pk>/', CounselingSessionRetrieveUpdateDestroyView.as_view(), name='counseling-session-retrieve-update-destroy'),
+    
 ]

@@ -15,11 +15,14 @@ from .serializers import GradeReportSerializer, AttendanceReportSerializer, Enro
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework.decorators import api_view, permission_classes
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 import csv
 from rest_framework.response import Response
 from rest_framework import status
 import requests
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+
 
 class StudentPerformanceReportView(generics.ListAPIView):
     serializer_class = GradeReportSerializer
@@ -31,6 +34,17 @@ class StudentPerformanceReportView(generics.ListAPIView):
     def get_queryset(self):
         queryset = Grade.objects.all()
         return queryset
+    
+    def get(self, request, *args, **kwargs):
+        if request.query_params.get('format') == 'pdf':
+            # Render the HTML template for the PDF
+            template_path = 'reports/student_performance_report_pdf.html'
+            context_data = {'report_data': self.get_queryset(), 'request': request}  # Pass the request object to the context
+            return generate_pdf_report(request, template_path, context_data)
+        elif request.query_params.get('format') == 'csv':
+            return generate_csv_report(request, self.get_serializer_class(), self.get_queryset(), 'student_performance_report.csv')
+        else:
+            return super().get(request, *args, **kwargs)
 
 class AttendanceReportView(generics.ListAPIView):
     serializer_class = AttendanceReportSerializer
@@ -304,3 +318,49 @@ def download_report_card(request, report_card_id):
         return response
     else:
         return Response({"message": "Report card file not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    
+def generate_pdf_report(request, template_path, context_data):
+    # Render the HTML template with the context data
+    template = get_template(template_path)
+    html = template.render(context_data)
+
+    # Create a PDF file
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="report.pdf"'
+
+    # Generate the PDF
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    # Check if PDF generation was successful
+    if pisa_status.err:
+        return HttpResponse('We had some errors <pre>' + html + '</pre>')
+
+    return response
+
+
+
+class Echo:
+    """An object that implements just the write method of the file-like interface."""
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
+
+def generate_csv_report(request, serializer_class, queryset, filename):
+    # Create a StreamingHttpResponse with CSV content
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+    response = StreamingHttpResponse((writer.writerow(row) for row in get_csv_data(serializer_class, queryset)),
+                                     content_type="text/csv")
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+def get_csv_data(serializer_class, queryset):
+    # Get the header row from the serializer fields
+    header = [field for field in serializer_class.Meta.fields]
+    yield header
+
+    # Yield data rows
+    serializer = serializer_class(queryset, many=True)
+    for item in serializer.data:
+        yield [item.get(field, '') for field in header]
