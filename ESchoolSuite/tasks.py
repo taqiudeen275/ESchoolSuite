@@ -4,7 +4,7 @@ from celery import shared_task
 from django.core.mail import send_mail
 from django.conf import settings
 import requests
-from students.models import AdmissionApplication
+from students.models import AdmissionApplication, Student
 from django.utils.html import strip_tags
 from django.template.loader import render_to_string
 
@@ -105,3 +105,48 @@ def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
+        
+        
+
+@shared_task
+def send_report_card_sms_task(student_id, report_card_url):
+    """Sends a report card link to the parent via SMS."""
+    try:
+        student = Student.objects.get(pk=student_id)
+        parent_phone_number = student.parent.phone_number  # Get parent's phone number
+    except Student.DoesNotExist:
+        print(f"Error: Student with ID {student_id} not found.")
+        return
+    except Exception as e:
+        print(f"Error getting parent details for student ID {student_id}: {e}")
+        return
+
+    if not parent_phone_number:
+        print(f"Error: No parent phone number found for student ID {student_id}")
+        return
+
+    api_key = settings.ARKESEL_API_KEY
+    sender_id = settings.ARKESEL_SENDER_ID
+    message = f"Dear Parent, your child's report card is ready. Download it here: {report_card_url}"
+
+    url = "https://sms.arkesel.com/v2/sms/send"
+    headers = {'api-key': api_key}
+    payload = {
+        'sender': sender_id,
+        'message': message,
+        'recipients': [parent_phone_number]
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+
+        if response.json()['status'] == 'success':
+            print(f"Report card SMS sent to {parent_phone_number}")
+        else:
+            print(f"Failed to send report card SMS to {parent_phone_number}: {response.json()}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error sending SMS to {parent_phone_number}: {e}")
+    except (KeyError, ValueError):
+        print(f"Error sending SMS to {parent_phone_number}: Invalid response format")

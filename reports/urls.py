@@ -24,4 +24,6 @@ urlpatterns = [
     path('class-report/', views.class_report, name='class_report'),
     
      path('custom/', views.custom_report, name='custom_report'),
+    path('generate-report-card/<int:student_id>/', views.GenerateReportCardView.as_view(), name='generate_report_card'),
+    path('download-report-card/<int:report_card_id>/', views.download_report_card, name='report-card-download'),
 ]

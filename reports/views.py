@@ -1,6 +1,11 @@
-from django.shortcuts import render
+import os
+from django.shortcuts import get_object_or_404, render
 from rest_framework import generics
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser
+from ESchoolSuite.tasks import send_report_card_sms_task
+from reports.models import ReportCard
+from reports.utils import generate_report_card_pdf
 from students.models import Student
 from academics.models import Grade, Attendance, Enrollment, Course, Class
 from staff.models import Staff
@@ -238,3 +243,64 @@ def class_report(request):
     response = requests.get('http://127.0.0.1:8000/api/reports/classes/', params=request.GET)
     report_data = response.json()
     return render(request, 'reports/class_report.html', {'report_data': report_data})
+
+
+
+
+class GenerateReportCardView(APIView):
+    permission_classes = [IsAdmin]
+
+    def post(self, request, student_id):
+        student = get_object_or_404(Student, pk=student_id)
+        term = request.data.get('term')
+        academic_year = request.data.get('academic_year')
+
+        # Validate term and academic_year here if necessary
+
+        # Generate the PDF report card
+        try:
+            pdf_file_path = generate_report_card_pdf(student, term, academic_year)
+        except Exception as e:
+            # Handle PDF generation errors
+            return Response({"message": f"Error generating report card: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        # Create a ReportCard instance (if you decide to use a model)
+        report_card = ReportCard.objects.create(
+            student=student,
+            term=term,
+            academic_year=academic_year,
+            pdf_file=pdf_file_path 
+        )
+
+        # Generate a secure URL for the report card
+        report_card_url = request.build_absolute_uri(f"/media/report_cards/{os.path.basename(pdf_file_path)}")
+
+        # Send SMS if requested
+        if request.data.get('send_sms') and student.parent and student.parent.phone_number:
+            send_report_card_sms_task.delay(student.id, report_card_url)
+            message = "Report card generated and sent via SMS."
+        else:
+            message = "Report card generated successfully."
+
+        return Response({
+            "message": message,
+            "report_card_url": report_card_url
+        }, status=status.HTTP_201_CREATED)
+        
+
+from django.http import FileResponse
+
+@api_view(['GET'])
+@permission_classes([IsAdmin])
+def download_report_card(request, report_card_id):
+    report_card = get_object_or_404(ReportCard, pk=report_card_id)
+
+    # Check if the report card file exists
+    if report_card.pdf_file:
+        # Open the file and serve it as a response
+        file = report_card.pdf_file.open()
+        response = HttpResponse(file, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{report_card.pdf_file.name}"'
+        return response
+    else:
+        return Response({"message": "Report card file not found."}, status=status.HTTP_404_NOT_FOUND)

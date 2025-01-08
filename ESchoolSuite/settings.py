@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import cloudinary.uploader
+import cloudinary.api	
+import cloudinary
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -58,6 +61,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist', # For blacklisting tokens
     'drf_yasg',
     'django_filters',
+    'cloudinary_storage',
+    'cloudinary',
     
 ]
 
@@ -217,3 +222,16 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+
+
+ARKESEL_API_KEY =  config('ARKESEL_API_KEY')
+ARKESEL_SENDER_ID =  config('ARKESEL_SENDER_ID')
+
+# Cloudinary configurations
+cloudinary.config = {
+    'cloud_name': config('CLOUDINARY_CLOUD_NAME'),
+    'api_key': config('CLOUDINARY_API_KEY'),
+    'api_secret': config('CLOUDINARY_API_SECRET')
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
