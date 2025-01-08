@@ -14,7 +14,6 @@ class MessageSerializer(serializers.ModelSerializer):
         
 
 
-
 class BulkMessageSerializer(serializers.ModelSerializer):
     sender = serializers.StringRelatedField()
 
@@ -24,6 +23,7 @@ class BulkMessageSerializer(serializers.ModelSerializer):
             'id',
             'sender',
             'recipient_group',
+            'custom_recipients',
             'subject',
             'message_body',
             'delivery_method',

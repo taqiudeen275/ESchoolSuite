@@ -30,6 +30,7 @@ class BulkMessage(models.Model):
     recipient_group = models.CharField(max_length=50)  # For now, a simple text field (e.g., "All Students", "Class 1A")
     subject = models.CharField(max_length=255)  # Subject for emails
     message_body = models.TextField()
+    custom_recipients = models.TextField(blank=True, null=True, help_text="Enter recipient emails or phone numbers separated by commas or newlines.")
     delivery_method = models.CharField(max_length=20, choices=DeliveryMethod.choices, default=DeliveryMethod.EMAIL)
     status = models.CharField(max_length=20, choices=(('Pending', 'Pending'), ('Sent', 'Sent'), ('Failed', 'Failed')), default='Pending')
     scheduled_time = models.DateTimeField(null=True, blank=True)  # Optional: For scheduling messages

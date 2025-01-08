@@ -2,6 +2,9 @@ from datetime import timezone
 import requests
 from rest_framework import generics, permissions
 from django.conf import settings
+from ESchoolSuite.tasks import send_bulk_email_task, send_bulk_sms_task
+from academics.models import Class
+from staff.models import Staff
 from students.models import Student
 from .models import BulkMessage, Message
 from .serializers import BulkMessageSerializer, MessageSerializer
@@ -92,88 +95,81 @@ class BulkMessageListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         bulk_message = serializer.save(sender=self.request.user)
         if bulk_message.delivery_method == BulkMessage.DeliveryMethod.EMAIL:
-            self.send_email(bulk_message)
-        elif bulk_message.delivery_method == BulkMessage.DeliveryMethod.SMS:
-            self.send_sms(bulk_message)
-
-    def send_email(self, bulk_message):
-        # Implement email sending logic here (using Django's send_mail or a third-party library)
-        recipient_list = self.get_recipients(bulk_message.recipient_group)  # You'll need to define this method
-        if recipient_list:
-            try:
-                send_mail(
-                    subject=bulk_message.subject,
-                    message=bulk_message.message_body,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=recipient_list,
-                    fail_silently=False,
+            recipient_list = self.get_recipients(bulk_message.recipient_group, bulk_message.custom_recipients)
+            if recipient_list:
+                send_bulk_email_task.delay(
+                    bulk_message.subject,
+                    bulk_message.message_body,
+                    settings.DEFAULT_FROM_EMAIL,
+                    recipient_list,
                 )
-                bulk_message.status = 'Sent'
-                bulk_message.sent_time = timezone.now()
-            except Exception as e:
+            else:
                 bulk_message.status = 'Failed'
-            finally:
                 bulk_message.save()
-        else:
-            bulk_message.status = 'Failed'
-            bulk_message.save()
-
-    def send_sms(self, bulk_message):
-        # Implement Arkesel SMS sending logic here
-        api_key = settings.ARKESEL_API_KEY  # Store your API key in settings.py
-        sender = settings.ARKESEL_SENDER_ID  # Store your sender ID in settings.py
-        recipients = self.get_recipients(bulk_message.recipient_group, as_phone_numbers=True)
-
-        if not recipients:
-            bulk_message.status = 'Failed'
-            bulk_message.save()
-            return
-
-        # Arkesel SMS API endpoint
-        url = "https://sms.arkesel.com/v2/sms/send"
-
-        headers = {
-            'api-key': api_key
-        }
-
-        payload = {
-            'sender': sender,
-            'message': bulk_message.message_body,
-            'recipients': recipients
-        }
-
-        try:
-            response = requests.post(url, headers=headers, json=payload)
-            response.raise_for_status()  # Raise an exception for bad status codes
-
-            # Check for successful response from Arkesel
-            if response.json()['status'] == 'success':
-                bulk_message.status = 'Sent'
-                bulk_message.sent_time = timezone.now()
+        elif bulk_message.delivery_method == BulkMessage.DeliveryMethod.SMS:
+            recipients = self.get_recipients(bulk_message.recipient_group, bulk_message.custom_recipients, as_phone_numbers=True)
+            if recipients:
+                send_bulk_sms_task.delay(
+                    settings.ARKESEL_API_KEY,
+                    settings.ARKESEL_SENDER_ID,
+                    bulk_message.message_body,
+                    recipients,
+                )
             else:
                 bulk_message.status = 'Failed'
-        except requests.exceptions.RequestException as e:
-            bulk_message.status = 'Failed'
-        except (KeyError, ValueError):
-            bulk_message.status = 'Failed'
-        finally:
-            bulk_message.save()
+                bulk_message.save()
 
-    def get_recipients(self, recipient_group, as_phone_numbers=False):
-        # Implement logic to get recipient emails or phone numbers based on recipient_group
-        # This is a placeholder, you'll need to customize it based on your application logic
-        if recipient_group == 'All Students':
-            if as_phone_numbers:
-                return [student.phone_number for student in Student.objects.all() if student.phone_number]
+    def get_recipients(self, recipient_group, custom_recipients=None, as_phone_numbers=False):
+        recipients = []
+
+        if recipient_group:
+            # Existing logic to get recipients based on group
+            if recipient_group == 'All Students':
+                if as_phone_numbers:
+                    recipients.extend([student.phone_number for student in Student.objects.all() if student.phone_number])
+                else:
+                    recipients.extend([student.user.email for student in Student.objects.all() if student.user.email])
+            elif recipient_group == 'All Parents':
+                if as_phone_numbers:
+                    recipients.extend([parent.phone_number for parent in Parent.objects.all() if parent.phone_number])
+                else:
+                    recipients.extend([parent.user.email for parent in Parent.objects.all() if parent.user.email])
+            elif recipient_group == 'All Teachers':
+                if as_phone_numbers:
+                    recipients.extend([staff.phone_number for staff in Staff.objects.filter(user__role=User.Role.TEACHER) if staff.phone_number])
+                else:
+                    recipients.extend([staff.user.email for staff in Staff.objects.filter(user__role=User.Role.TEACHER) if staff.user.email])
+            elif recipient_group == 'All Staff':
+                if as_phone_numbers:
+                    recipients.extend([staff.phone_number for staff in Staff.objects.all() if staff.phone_number])
+                else:
+                    recipients.extend([staff.user.email for staff in Staff.objects.all() if staff.user.email])
             else:
-                return [student.user.email for student in Student.objects.all() if student.user.email]
-        elif recipient_group == 'All Parents':
-            if as_phone_numbers:
-                return [parent.phone_number for parent in Parent.objects.all() if parent.phone_number]
-            else:
-                return [parent.user.email for parent in Parent.objects.all() if parent.user.email]
-        # Add more conditions for other recipient groups
-        return []
+                # Handle filtering by class
+                try:
+                    class_obj = Class.objects.get(name=recipient_group)
+                    students_in_class = Student.objects.filter(enrollments__class_enrolled=class_obj).distinct()
+
+                    if as_phone_numbers:
+                        recipients.extend([student.phone_number for student in students_in_class if student.phone_number])
+                    else:
+                        recipients.extend([student.user.email for student in students_in_class if student.user.email])
+
+                except Class.DoesNotExist:
+                    return []
+
+        if custom_recipients:
+            # Handle custom recipients
+            custom_recipients_list = custom_recipients.replace('\n', ',').split(',')
+            for recipient in custom_recipients_list:
+                recipient = recipient.strip()
+                if recipient:  # Add only if not empty
+                    if as_phone_numbers and recipient.startswith("+"):  # Basic check for phone numbers
+                        recipients.append(recipient)
+                    elif '@' in recipient:  # Basic check for email
+                        recipients.append(recipient)
+
+        return list(set(recipients))  # Remove duplicates
 
 class BulkMessageRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = BulkMessage.objects.all()
