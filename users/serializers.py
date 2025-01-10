@@ -4,7 +4,8 @@ from students.models import Student
 from staff.models import Staff
 from django.db import transaction
 from django.utils import timezone
-
+from rest_framework.validators import UniqueValidator
+from django.contrib.auth.password_validation import validate_password
 
 
 
@@ -24,6 +25,48 @@ class UserParentProfileSerializer(serializers.ModelSerializer):
         model = Parent
         fields = ['first_name', 'last_name', 'middle_name', 'occupation', 'email', 'phone_number', 'address', 'place_of_work']
 
+
+class UserRegisterationSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        validators=[validate_password]
+    )
+    password2 = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name')
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True}
+        }
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError(
+                {"password": "Password fields didn't match."}
+            )
+        return attrs
+
+    def create(self, validated_data):
+        # Remove password2 from the data as it's not needed for user creation
+        validated_data.pop('password2')
+        
+        # Create user instance but don't save to DB yet
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            password=validated_data['password']  # create_user handles password hashing
+        )
+        
+        return user
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

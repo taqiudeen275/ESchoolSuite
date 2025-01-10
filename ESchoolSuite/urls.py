@@ -5,6 +5,11 @@ from django.conf import settings
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenBlacklistView
+)
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -35,7 +40,9 @@ urlpatterns = [
     path('api/reports/', include('reports.urls')),
     path('api/custom_tables/', include('custom_tables.urls')),
     
-     
+   path('api/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+   path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+   path('api/auth/logout/', TokenBlacklistView.as_view(), name='token_blacklist'), 
     
        # Swagger documentation URLs
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),

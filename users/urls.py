@@ -13,6 +13,7 @@ from .views import (CurrentUserProfileView, ParentListCreateView,
 
 from rest_framework_simplejwt.views import TokenRefreshView
 
+
 urlpatterns = [
     path('', UserListCreateView.as_view(), name='user-list-create'),
     path('<int:pk>/', UserRetrieveUpdateDestroyView.as_view(), name='user-retrieve-update-destroy'),

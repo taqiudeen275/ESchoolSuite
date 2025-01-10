@@ -64,7 +64,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist', # For blacklisting tokens
     'drf_yasg',
     'django_filters',
-    'cloudinary_storage',
     'cloudinary',
     
 ]
@@ -159,10 +158,23 @@ REST_FRAMEWORK = {
 }
 
 from datetime import timedelta
+
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5), # Shorten access token lifetime
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=14), # Refresh token lifetime (adjust as needed)
+    'ROTATE_REFRESH_TOKENS': True, # Enable refresh token rotation
+    'BLACKLIST_AFTER_ROTATION': True, # Blacklist old refresh tokens after rotation
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
 }
+
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -230,11 +242,10 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 ARKESEL_API_KEY =  config('ARKESEL_API_KEY')
 ARKESEL_SENDER_ID =  config('ARKESEL_SENDER_ID')
 
-# Cloudinary configurations
-cloudinary.config = {
-    'cloud_name': config('CLOUDINARY_CLOUD_NAME'),
-    'api_key': config('CLOUDINARY_API_KEY'),
-    'api_secret': config('CLOUDINARY_API_SECRET')
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY':  config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET')
 }
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

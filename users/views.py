@@ -2,7 +2,7 @@ from rest_framework import generics, status
 
 from students.models import Student
 from students.serializers import StudentSerializer
-from .serializers import PasswordResetSerializer, PasswordResetConfirmSerializer
+from .serializers import PasswordResetSerializer, PasswordResetConfirmSerializer, UserRegisterationSerializer
 from celery import shared_task
 from django.conf import settings
 from django.core.mail import send_mail
@@ -22,7 +22,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
+from rest_framework import filters,serializers
 from academics.models import Enrollment, Grade, Attendance, Assignment, Class
 from academics.serializers import EnrollmentSerializer, GradeSerializer, AttendanceSerializer, AssignmentSerializer, ClassSerializer
 
@@ -167,15 +167,42 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 class UserRegistrationView(APIView):
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
+        serializer = UserRegisterationSerializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
+            
             return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
+                'status': 'success',
+                'message': 'User registered successfully',
+                'data': {
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                    },
+                    'tokens': {
+                        'refresh': str(refresh),
+                        'access': str(refresh.access_token),
+                    }
+                }
             }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        except serializers.ValidationError as e:
+            return Response({
+                'status': 'error',
+                'message': 'Validation failed',
+                'errors': e.detail
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            return Response({
+                'status': 'error',
+                'message': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class UserLogoutView(APIView):
     def post(self, request):
