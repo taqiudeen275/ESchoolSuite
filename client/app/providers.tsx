@@ -9,6 +9,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ApiProvider
       config={{
         baseUrl: process.env.NEXT_PUBLIC_API_URL!, // Your Django API base URL
+        tokenPrefix: 'Bearer', // Default: 'Bearer'
+        accessTokenLifetime: 300, // Default: 300 (5 minutes)
+        refreshTokenLifetime: 86400, // Default: 86400 (24 hours)
+        autoRefresh: true, // Default: true
+        csrfEnabled: true, 
       }}
     >
       <QueryClientProvider client={queryClient}>

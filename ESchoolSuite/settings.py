@@ -161,9 +161,10 @@ from datetime import timedelta
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5), # Shorten access token lifetime
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=14), # Refresh token lifetime (adjust as needed)
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # Refresh token lifetime (adjust as needed)
     'ROTATE_REFRESH_TOKENS': True, # Enable refresh token rotation
     'BLACKLIST_AFTER_ROTATION': True, # Blacklist old refresh tokens after rotation
+    'UPDATE_LAST_LOGIN': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'VERIFYING_KEY': None,

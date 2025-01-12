@@ -55,13 +55,13 @@ export default function SignInPage() {
     setIsLoading(true);
 
     try {
-      await login(data.username, data.password);
+      await login(data.username, data.password, false, '/api/users/login/');
       // Successfully signed in
       toast({
         title: "Success",
         description: "You have successfully signed in.",
       });
-      router.push("/admin"); // Redirect to admin dashboard
+      router.push("/dashboard/admin"); // Redirect to admin dashboard
     } catch (error: any) {
       // Handle sign-in error
       toast({

@@ -161,13 +161,7 @@ const BulkMessageList = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Bulk Messages</h2>
-        <Button>
-          <Send className="mr-2 h-4 w-4" />
-          Create New Message
-        </Button>
-      </div>
+     
       <div className="flex items-center gap-4 mb-4">
         <Select
           value={recipientGroupFilter}

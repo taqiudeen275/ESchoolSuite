@@ -41,7 +41,7 @@ urlpatterns = [
     path('api/custom_tables/', include('custom_tables.urls')),
     
    path('api/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-   path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+   path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
    path('api/auth/logout/', TokenBlacklistView.as_view(), name='token_blacklist'), 
     
        # Swagger documentation URLs
