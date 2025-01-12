@@ -22,7 +22,7 @@ const BulkMessagingPage = () => {
           </DialogTrigger>
           <DialogContent>
             {/* Render the form inside the modal */}
-            <CreateBulkMessageForm />
+            <CreateBulkMessageForm  onClose={() => setIsCreateModalOpen(false)}  />
           </DialogContent>
         </Dialog>
       </div>

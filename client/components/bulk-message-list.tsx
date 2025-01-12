@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +46,7 @@ import {
 } from "./ui/select";
 import { Input } from "./ui/input";
 import { toast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 // Define Zod schema for BulkMessage
 const bulkMessageSchema = z.object({
@@ -80,7 +82,7 @@ const BulkMessageList = () => {
     undefined
   );
   const apiClient = useApiClient();
-
+  const router = useRouter()
   const {
     data: bulkMessages,
     error,
@@ -161,7 +163,6 @@ const BulkMessageList = () => {
 
   return (
     <div>
-     
       <div className="flex items-center gap-4 mb-4">
         <Select
           value={recipientGroupFilter}
@@ -245,93 +246,92 @@ const BulkMessageList = () => {
             ))
           ) : error ? (
             <TableRow>
-              <TableCell colSpan={10}>
-                Error loading bulk messages.
-              </TableCell>
+              <TableCell colSpan={10}>Error loading bulk messages.</TableCell>
             </TableRow>
           ) : bulkMessages && bulkMessages.length > 0 ? (
             bulkMessages.map((message) => (
-              <TableRow key={message.id}>
-                <TableCell>{message.id}</TableCell>
-                <TableCell>{message.sender}</TableCell>
-                <TableCell>{message.recipient_group}</TableCell>
-                <TableCell>{message.subject}</TableCell>
-                <TableCell>{message.message_body.slice(0, 50)}...</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      message.delivery_method === "email"
-                        ? "default"
-                        : "secondary"
-                    }
-                  >
-                    {message.delivery_method}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      message.status === "Failed"
-                        ? "destructive"
-                        : message.status === "Sent"
-                        ? "default"
-                        : "secondary"
-                    }
-                  >
-                    {message.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {message.scheduled_time
-                    ? new Date(message.scheduled_time).toLocaleString()
-                    : "-"}
-                </TableCell>
-                <TableCell>
-                  {message.sent_time
-                    ? new Date(message.sent_time).toLocaleString()
-                    : "-"}
-                </TableCell>
-                <TableCell>
-                  <AlertDialog>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <AlertDialogTrigger asChild>
-                          <DropdownMenuItem className="text-red-500 focus:bg-red-50 focus:text-red-900">
-                            Delete
-                          </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          Are you absolutely sure?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently
-                          delete the message.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(message.id)}
-                        >
-                          Continue
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
-              </TableRow>
+                  
+                <TableRow key={message.id} >
+                  <TableCell className="cursor-pointer" onClick={()=> router.push(`bulk-messaging/${message.id}`)}>{message.id}</TableCell>
+                  <TableCell className="cursor-pointer" onClick={()=> router.push(`bulk-messaging/${message.id}`)}>{message.sender}</TableCell>
+                  <TableCell className="cursor-pointer" onClick={()=> router.push(`bulk-messaging/${message.id}`)}>{message.recipient_group}</TableCell>
+                  <TableCell className="cursor-pointer" onClick={()=> router.push(`bulk-messaging/${message.id}`)}>{message.subject}</TableCell>
+                  <TableCell className="cursor-pointer" onClick={()=> router.push(`bulk-messaging/${message.id}`)}>{message.message_body.slice(0, 50)}...</TableCell>
+                  <TableCell className="cursor-pointer" onClick={()=> router.push(`bulk-messaging/${message.id}`)}>
+                    <Badge
+                      variant={
+                        message.delivery_method === "email"
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {message.delivery_method}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="cursor-pointer" onClick={()=> router.push(`bulk-messaging/${message.id}`)}>
+                    <Badge
+                      variant={
+                        message.status === "Failed"
+                          ? "destructive"
+                          : message.status === "Sent"
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {message.status}
+                    </Badge>
+                  </TableCell >
+                  <TableCell className="cursor-pointer" onClick={()=> router.push(`bulk-messaging/${message.id}`)}>
+                    {message.scheduled_time
+                      ? new Date(message.scheduled_time).toLocaleString()
+                      : "-"}
+                  </TableCell>
+                  <TableCell className="cursor-pointer" onClick={()=> router.push(`bulk-messaging/${message.id}`)}>
+                    {message.sent_time
+                      ? new Date(message.sent_time).toLocaleString()
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    <AlertDialog>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem className="cursor-pointer" onClick={()=> router.push(`bulk-messaging/edit/${message.id}`)}>Edit</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem className="text-red-500 focus:bg-red-50 focus:text-red-900">
+                              Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Are you absolutely sure?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete the message.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(message.id)}
+                          >
+                            Continue
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
             ))
           ) : (
             <TableRow>
@@ -359,7 +359,9 @@ const BulkMessageList = () => {
             size="sm"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={
-              bulkMessages ? currentPage >= bulkMessages.length / pageSize : true
+              bulkMessages
+                ? currentPage >= bulkMessages.length / pageSize
+                : true
             }
           >
             Next

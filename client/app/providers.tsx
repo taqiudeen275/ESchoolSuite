@@ -10,9 +10,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       config={{
         baseUrl: process.env.NEXT_PUBLIC_API_URL!, // Your Django API base URL
         tokenPrefix: 'Bearer', // Default: 'Bearer'
-        accessTokenLifetime: 300, // Default: 300 (5 minutes)
-        refreshTokenLifetime: 86400, // Default: 86400 (24 hours)
-        autoRefresh: true, // Default: true
+        accessTokenLifetime: 86400, // Default: 300 (5 minutes)
+        refreshTokenLifetime: 1209600, // Default: 86400 (24 hours)
+        autoRefresh: false, // Default: true
         csrfEnabled: true, 
         retryAttempts: 3,
         retryDelay: 10000

@@ -11,6 +11,8 @@ import { AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 // Define Zod schema for BulkMessage
 const bulkMessageSchema = z.object({
@@ -37,13 +39,34 @@ const BulkMessageDetail = ({ id }: { id: number }) => {
     mutate,
   } = useApi<BulkMessage>(`/api/communications/bulk-messages/${id}/`, apiClient);
   const [messageData, setMessageData] = useState<BulkMessage | null>(null);
-
+ const {toast} = useToast()
   useEffect(() => {
     if (message) {
       setMessageData(message);
     }
   }, [message]);
+  const router = useRouter();
 
+  const handleDelete = async (id: number) => {
+    try {
+      await apiClient.fetch(`/api/communications/bulk-messages/${id}/`, {
+        method: "DELETE",
+      });
+      // Trigger a revalidation to update the list after deletion
+      mutate();
+      toast({
+        title: "Success",
+        description: "Message deleted successfully",
+      });
+      router.push(`/dashboard/admin/bulk-messaging/`);
+    } catch (error: any) {
+      console.error("Error deleting message:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Error deleting message",
+      });
+    }
+  };
   const handleStatusUpdate = async (newStatus: "Pending" | "Sent" | "Failed") => {
     try {
       const response = await apiClient.fetch<any>(`/api/communications/bulk-messages/${id}/`, {
@@ -168,12 +191,12 @@ const BulkMessageDetail = ({ id }: { id: number }) => {
           {/* Add more fields as needed */}
         </div>
         <div className="mt-4 flex gap-2">
-          <Link href={`/admin/bulk-messaging/edit/${messageData.id}`}>
+          <Link href={`/dashboard/admin/bulk-messaging/edit/${messageData.id}`}>
             <Button variant="secondary">Edit</Button>
           </Link>
           <Button
             variant="destructive"
-            // onClick={() => handleDelete(messageData.id)}
+            onClick={() => handleDelete(messageData.id)}
           >
             Delete
           </Button>

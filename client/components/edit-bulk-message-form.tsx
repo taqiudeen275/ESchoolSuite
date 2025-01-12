@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,18 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { CalendarIcon, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useApiClient } from "nextjs-django-sdk";
-import { useSWRConfig } from "swr";
+import { useApi, useApiClient } from "nextjs-django-sdk";
+import { useRouter } from "next/navigation";
 
 const bulkMessageSchema = z.object({
   recipient_group: z.string().min(1, { message: "Please select a recipient group" }),
@@ -44,21 +35,22 @@ const bulkMessageSchema = z.object({
   message_body: z.string().min(1, { message: "Message body is required" }),
   delivery_method: z.enum(["email", "sms"]),
   scheduled_time: z.string().optional(), // No need for .datetime()
+  status: z.enum(["Pending", "Sent", "Failed"]).optional()
 });
 
 type BulkMessageFormValues = z.infer<typeof bulkMessageSchema>;
 
-const CreateBulkMessageForm = ({
-  onClose,
-}: {
-  onClose: () => void;
-}) => {
+const EditBulkMessageForm = ({ id }: { id: number }) => {
   const [isCustomRecipients, setIsCustomRecipients] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Track submission state
-  const [date, setDate] = useState<Date>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
   const apiClient = useApiClient();
   const { toast } = useToast();
-  const { mutate } = useSWRConfig();
+
+  const { data: message, error, isLoading, mutate } = useApi<BulkMessageFormValues>(
+    `/api/communications/bulk-messages/${id}/`,
+    apiClient
+  );
 
   const form = useForm<BulkMessageFormValues>({
     resolver: zodResolver(bulkMessageSchema),
@@ -69,42 +61,44 @@ const CreateBulkMessageForm = ({
       message_body: "",
       delivery_method: "email",
       scheduled_time: "",
+      status: "Pending"
     },
   });
 
+  useEffect(() => {
+    if (message) {
+      // Pre-fill the form with fetched data
+      form.reset(message);
+      setIsCustomRecipients(message.recipient_group === "Custom Recipients");
+    }
+  }, [message, form]);
+
   const onSubmit = async (data: BulkMessageFormValues) => {
     setIsSubmitting(true);
-  
-    // Format date and time to ISO 8601 format if scheduled_time is provided
-    if (date) {
-      const hours = date.getHours().toString().padStart(2, '0');
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-      data.scheduled_time = `${format(date, "yyyy-MM-dd")}T${hours}:${minutes}:00Z`;
-    }
-  
-    try {
-      const response = await apiClient.fetch<any>("/api/communications/bulk-messages/", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-  
-      // Assuming a successful response has a status code of 201 (Created)
-      if (response.id) {
-        toast({
-          title: "Success",
-          description: "Bulk message created successfully.",
-        });
-        form.reset(); // Reset the form after successful creation
-        mutate("/api/communications/bulk-messages/");
-        onClose();
-      } else {
-        // Handle unexpected response statuses
-        const errorData = await response.json();
 
+    try {
+      const response = await apiClient.fetch<any>(
+        `/api/communications/bulk-messages/${id}/`,
+        {
+          method: "PATCH", // Use PATCH for partial updates
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (response) {
+        toast({
+          
+          title: "Success",
+          description: "Bulk message updated successfully.",
+        });
+        mutate(data)
+        router.push(`/dashboard/admin/bulk-messaging/${id}`); // Navigate back to the detail view
+      } else {
+        const errorData = await response;
         toast({
           variant: "destructive",
           title: "Error",
-          description: errorData.error || "Failed to create bulk message",
+          description: errorData.error || "Failed to update bulk message",
         });
       }
     } catch (error: any) {
@@ -117,10 +111,23 @@ const CreateBulkMessageForm = ({
       setIsSubmitting(false);
     }
   };
-  
+
+  if (isLoading) {
+    return <div>Loading...</div>; // You can replace this with a Skeleton component
+  }
+
+  if (error) {
+    return <div>Error loading message data.</div>;
+  }
+
+  if (!message) {
+    return null;
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Recipient Group */}
         <FormField
           control={form.control}
           name="recipient_group"
@@ -154,6 +161,7 @@ const CreateBulkMessageForm = ({
           )}
         />
 
+        {/* Custom Recipients */}
         {isCustomRecipients && (
           <FormField
             control={form.control}
@@ -173,6 +181,7 @@ const CreateBulkMessageForm = ({
           />
         )}
 
+        {/* Subject */}
         <FormField
           control={form.control}
           name="subject"
@@ -187,6 +196,7 @@ const CreateBulkMessageForm = ({
           )}
         />
 
+        {/* Message Body */}
         <FormField
           control={form.control}
           name="message_body"
@@ -201,6 +211,7 @@ const CreateBulkMessageForm = ({
           )}
         />
 
+        {/* Delivery Method */}
         <FormField
           control={form.control}
           name="delivery_method"
@@ -210,7 +221,7 @@ const CreateBulkMessageForm = ({
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                   className="flex space-x-4"
                 >
                   <FormItem className="flex items-center space-x-2 space-y-0">
@@ -232,54 +243,37 @@ const CreateBulkMessageForm = ({
           )}
         />
 
+        {/* Status */}
         <FormField
           control={form.control}
-          name="scheduled_time"
+          name="status"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Scheduled Time (Optional)</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(new Date(field.value), "yyyy-MM-dd'T'HH:mm")
-                      ) : (
-                        <span>Pick a date and time</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    disabled={(date) =>
-                      date < new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Sent">Sent</SelectItem>
+                  <SelectItem value="Failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* Submit Button */}
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Creating..." : "Create Message"}
-          <Send className="ml-2 h-4 w-4" />
+          {isSubmitting ? "Updating..." : "Update Message"}
         </Button>
       </form>
     </Form>
   );
 };
 
-export default CreateBulkMessageForm;
+export default EditBulkMessageForm;
