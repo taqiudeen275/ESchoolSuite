@@ -1,6 +1,6 @@
-"use client";
-
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -28,6 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useAuth, useApiClient } from "nextjs-django-sdk";
 
 const loginFormSchema = z.object({
   username: z.string().min(1, { message: "Username is required" }),
@@ -40,6 +40,8 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const apiClient = useApiClient();
+  const { login, user } = useAuth(apiClient);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -53,35 +55,19 @@ export default function SignInPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/sign-in", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      await login(data.username, data.password);
+      // Successfully signed in
+      toast({
+        title: "Success",
+        description: "You have successfully signed in.",
       });
-
-      if (response.ok) {
-        // Successfully signed in
-        toast({
-          title: "Success",
-          description: "You have successfully signed in.",
-        });
-        router.push("/dashboard/admin"); // Redirect to admin dashboard
-      } else {
-        // Handle sign-in error
-        const errorData = await response.json();
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: errorData.error || "Failed to sign in",
-        });
-      }
-    } catch (error) {
+      router.push("/admin"); // Redirect to admin dashboard
+    } catch (error: any) {
+      // Handle sign-in error
       toast({
         variant: "destructive",
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: error.message || "Failed to sign in",
       });
     } finally {
       setIsLoading(false);
@@ -146,7 +132,7 @@ export default function SignInPage() {
             href="/auth/sign-up"
             className="text-muted-foreground hover:underline"
           >
-            Don&apos;t have an account? Sign Up
+            Don&lsquo;t have an account? Sign Up
           </Link>
         </div>
       </CardFooter>

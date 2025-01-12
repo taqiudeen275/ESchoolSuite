@@ -1,9 +1,12 @@
-import React from 'react'
+import BulkMessageList from "@/components/bulk-message-list";
+import React from "react";
 
 const BulkMessagingPage = () => {
   return (
-    <div>BulkMessagingPage</div>
-  )
-}
+    <div className="p-6">
+      <BulkMessageList />
+    </div>
+  );
+};
 
-export default BulkMessagingPage
+export default BulkMessagingPage;
