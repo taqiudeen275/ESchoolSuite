@@ -14,6 +14,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
         refreshTokenLifetime: 86400, // Default: 86400 (24 hours)
         autoRefresh: true, // Default: true
         csrfEnabled: true, 
+        retryAttempts: 3,
+        retryDelay: 10000
       }}
     >
       <QueryClientProvider client={queryClient}>
