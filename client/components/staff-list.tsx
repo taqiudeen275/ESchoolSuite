@@ -198,7 +198,7 @@ const StaffList = () => {
             <SelectValue placeholder="Role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value=" ">All</SelectItem>
             <SelectItem value="ADMIN">Admin</SelectItem>
             <SelectItem value="TEACHER">Teacher</SelectItem>
             <SelectItem value="STAFF">Staff</SelectItem>
@@ -215,7 +215,7 @@ const StaffList = () => {
             <SelectValue placeholder="Gender" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value=" ">All</SelectItem>
             <SelectItem value="Male">Male</SelectItem>
             <SelectItem value="Female">Female</SelectItem>
             {/* Add other genders as needed */}
@@ -231,7 +231,7 @@ const StaffList = () => {
             <SelectValue placeholder="Region" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value=" ">All</SelectItem>
             <SelectItem value="Greater Accra">Greater Accra</SelectItem>
             <SelectItem value="Ashanti">Ashanti</SelectItem>
             {/* Add other regions as needed */}
@@ -247,7 +247,7 @@ const StaffList = () => {
             <SelectValue placeholder="Qualification" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value=" ">All</SelectItem>
             <SelectItem value="Bachelor's Degree">
               Bachelor's Degree
             </SelectItem>

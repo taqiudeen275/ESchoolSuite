@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { Home, MessageCircle } from "lucide-react";
+import { Home, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -20,6 +20,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen }) => {
       name: "Bulk Messaging",
       href: "/admin/bulk-messaging",
       icon: <MessageCircle className="h-4 w-4" />,
+    },
+    {
+      name: "Staffs",
+      href: "staff",
+      icon: <Users className="h-4 w-4" />,
     },
     // Add more sidebar items here
   ];
