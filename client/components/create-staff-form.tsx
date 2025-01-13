@@ -99,7 +99,7 @@ const CreateStaffForm = () => {
 
   const onSubmit = async (data: CreateStaffFormValues) => {
     setIsSubmitting(true);
-  
+  console.log(data);
     try {
       // Create the user first
       const userResponse:any = await apiClient.fetch("/api/users/", {
@@ -122,6 +122,8 @@ const CreateStaffForm = () => {
         });
         return;
       }
+
+      console.log("Response from server", userResponse)
   
       const userData = await userResponse;
   
