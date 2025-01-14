@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client";
 
@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { useApiClient } from "nextjs-django-sdk";
 
 interface FieldErrors {
   [key: string]: string[];
@@ -33,6 +34,7 @@ export default function SignUpPage() {
   const [role, setRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+    const apiClient = useApiClient();
   
   const router = useRouter();
   const { toast } = useToast();
@@ -50,31 +52,40 @@ export default function SignUpPage() {
     }
 
     try {
-      const response = await fetch("/api/auth/sign-up", {
+     
+      const userResponse = await apiClient.fetch<any>("/api/users/register/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, email, password, confirmPassword, firstName, lastName, role }),
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          password2: confirmPassword,
+          first_name: firstName,
+          last_name: lastName,
+          role: role,
+        }),
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
+  
+      if (userResponse) {
         toast({
           title: "Success",
           description: "Account created successfully.",
         });
         router.push("/auth/sign-in");
       } else {
-        if (data.errors) {
-          setFieldErrors(data.errors.errors);
+        if (userResponse) {
+          setFieldErrors(userResponse);
         }
       }
-    } catch (error) {
-      setFieldErrors({ 
-        general: ['An unexpected error occurred. Please try again later.'] 
-      });
+    } catch (error:any) {
+      if (error.errors) {
+        setFieldErrors(error.errors);
+      }else{
+
+        setFieldErrors({ 
+          general: ['An unexpected error occurred. Please try again later.'] 
+        });
+      }
     } finally {
       setIsLoading(false);
     }

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -47,18 +49,7 @@ const createStaffFormSchema = z.object({
   bank_name: z.string().optional(),
   bank_account_number: z.string().optional(),
   bank_branch: z.string().optional(),
-  role: z.enum([
-    "ADMIN",
-    "TEACHER",
-    "STUDENT",
-    "PARENT",
-    "STAFF",
-    "ACCOUNTANT",
-    "LIBRARIAN",
-    "COUNSELOR",
-  ]),
-  username: z.string().min(1, { message: "Username is required" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters long"}),
+ 
 });
 
 type CreateStaffFormValues = z.infer<typeof createStaffFormSchema>;
@@ -91,47 +82,47 @@ const CreateStaffForm = () => {
       bank_name: "",
       bank_account_number: "",
       bank_branch: "",
-      role: "STAFF",
-      username: "",
-      password: ""
+      // role: "STAFF",
+      // username: "",
+      // password: ""
     },
   });
 
   const onSubmit = async (data: CreateStaffFormValues) => {
     setIsSubmitting(true);
-  console.log(data);
     try {
-      // Create the user first
-      const userResponse:any = await apiClient.fetch("/api/users/", {
-        method: "POST",
-        body: JSON.stringify({
-          username: data.username,
-          email: data.email,
-          password: data.password,
-          role: data.role,
-          first_name: data.first_name,
-          last_name: data.last_name,
-        }),
-      });
+      // // Create the user first
+      // const userResponse:any = await apiClient.fetch("/api/users/register/", {
+      //   method: "POST",
+      //   body: JSON.stringify({
+      //     username: data.username,
+      //     email: data.email,
+      //     password: data.password,
+      //     password2: data.password,
+      //     role: "STAFF",
+      //     first_name: data.first_name,
+      //     last_name: data.last_name,
+      //   }),
+      // });
   
-      if (!userResponse) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description:  "Failed to create user",
-        });
-        return;
-      }
+      // if (!userResponse) {
+      //   toast({
+      //     variant: "destructive",
+      //     title: "Error",
+      //     description:  "Failed to create user",
+      //   });
+      //   return;
+      // }
 
-      console.log("Response from server", userResponse)
+      // console.log("Response from server", userResponse)
+      // console.log("Staff user id", userResponse.data.user.id)
   
-      const userData = await userResponse;
   
       // Then create the staff profile
       const staffResponse:any = await apiClient.fetch("/api/staff/", {
         method: "POST",
         body: JSON.stringify({
-          user: userData.id, // Use the newly created user's ID
+          // user: userResponse.data.user, // Use the newly created user's ID
           first_name: data.first_name,
           last_name: data.last_name,
           middle_name: data.middle_name,
@@ -170,6 +161,7 @@ const CreateStaffForm = () => {
         });
       }
     } catch (error: any) {
+      console.log(error)
       toast({
         variant: "destructive",
         title: "Error",
@@ -184,33 +176,7 @@ const CreateStaffForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* User fields */}
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter username" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter password" type="password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+   
 
         {/* Staff fields */}
         <FormField
@@ -477,33 +443,7 @@ const CreateStaffForm = () => {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Role</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="ADMIN">ADMIN</SelectItem>
-                  <SelectItem value="TEACHER">TEACHER</SelectItem>
-                  <SelectItem value="STUDENT">STUDENT</SelectItem>
-                  <SelectItem value="PARENT">PARENT</SelectItem>
-                  <SelectItem value="STAFF">STAFF</SelectItem>
-                  <SelectItem value="ACCOUNTANT">ACCOUNTANT</SelectItem>
-                  <SelectItem value="LIBRARIAN">LIBRARIAN</SelectItem>
-                  <SelectItem value="COUNSELOR">COUNSELOR</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+       
 
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Creating..." : "Create Staff Member"}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useApi, useApiClient } from "nextjs-django-sdk";
@@ -105,7 +106,7 @@ const StaffList = () => {
   } = useApi<Staff[]>(
     `/api/staff/?page=${currentPage}&page_size=${pageSize}&search=${
       searchFilter || ""
-    }&user__role=${roleFilter || ""}&gender=${genderFilter || ""}®ion=${
+    }&user__role=${roleFilter || ""}&gender=${genderFilter || ""}&region  =${
       regionFilter || ""
     }&qualification=${qualificationFilter || ""}&date_joined=${
       dateJoinedFilter || ""
@@ -174,7 +175,7 @@ const StaffList = () => {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">Staff/Teacher List</h2>
-        <Link href={"/admin/staff/create"}>
+        <Link href={"/dashboard/admin/staff/create"}>
           <Button>
             <User className="mr-2 h-4 w-4" />
             Create New Staff
@@ -198,7 +199,7 @@ const StaffList = () => {
             <SelectValue placeholder="Role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value=" ">All</SelectItem>
             <SelectItem value="ADMIN">Admin</SelectItem>
             <SelectItem value="TEACHER">Teacher</SelectItem>
             <SelectItem value="STAFF">Staff</SelectItem>
@@ -215,7 +216,7 @@ const StaffList = () => {
             <SelectValue placeholder="Gender" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value=" ">All</SelectItem>
             <SelectItem value="Male">Male</SelectItem>
             <SelectItem value="Female">Female</SelectItem>
             {/* Add other genders as needed */}
@@ -231,7 +232,7 @@ const StaffList = () => {
             <SelectValue placeholder="Region" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value=" ">All</SelectItem>
             <SelectItem value="Greater Accra">Greater Accra</SelectItem>
             <SelectItem value="Ashanti">Ashanti</SelectItem>
             {/* Add other regions as needed */}
@@ -247,12 +248,12 @@ const StaffList = () => {
             <SelectValue placeholder="Qualification" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value=" ">All</SelectItem>
             <SelectItem value="Bachelor's Degree">
-              Bachelor's Degree
+              Bachelor&apos;s Degree
             </SelectItem>
-            <SelectItem value="Master's Degree">Master's Degree</SelectItem>
-            <SelectItem value="Bachelor's Degree">Bachelor's Degree</SelectItem>
+            <SelectItem value="Master's Degree">Master&apos;s Degree</SelectItem>
+            <SelectItem value="Bachelor's Degree">Bachelor&apos;s Degree</SelectItem>
             {/* Add other qualifications as needed */}
           </SelectContent>
         </Select>
