@@ -17,6 +17,7 @@ class StaffListCreateView(generics.ListCreateAPIView):
         if self.request.query_params.get('basic') == 'true':
             return StaffBasicInfoSerializer
         return StaffSerializer
+    
 
 class StaffRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Staff.objects.all()

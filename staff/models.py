@@ -1,9 +1,14 @@
+from django.utils import timezone
 from django.db import models
 from users.models import User
 from django.core.validators import MinValueValidator
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+from django.conf import settings
+import re
 
 class Staff(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'role__in': [User.Role.TEACHER, User.Role.STAFF, User.Role.ACCOUNTANT, User.Role.LIBRARIAN, User.Role.COUNSELOR]}, related_name='staff_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE,blank=True, null=True, limit_choices_to={'role__in': [User.Role.TEACHER, User.Role.STAFF, User.Role.ACCOUNTANT, User.Role.LIBRARIAN, User.Role.COUNSELOR]}, related_name='staff_profile')
     staff_id = models.CharField(max_length=20, unique=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -26,6 +31,43 @@ class Staff(models.Model):
     bank_account_number = models.CharField(max_length=50, blank=True, null=True)
     bank_branch = models.CharField(max_length=50, blank=True, null=True)
     salary = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, validators=[MinValueValidator(0, message="Salary cannot be negative.")])
+
+    def generate_staff_id(self):
+        """Generates a unique staff ID with a sequence."""
+        year = str(timezone.now().year)[-2:]
+        prefix = f"ST-{year}"
+
+        # Find the last Staff ID with the same prefix
+        last_staff = Staff.objects.filter(
+            user__username__startswith=prefix
+        ).order_by('-user__username').first()
+
+        if last_staff:
+            # Extract the last number and increment it
+            last_number = int(re.findall(r'\d+', last_staff.user.username)[-1])
+            new_number = last_number + 1
+        else:
+            # Start from 1 if no previous staff ID with the same prefix
+            new_number = 1
+
+        return f"{prefix}-{new_number:04d}"
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            if not self.user_id:
+                # Auto-create a User instance only if user is not provided
+                user = User.objects.create(
+                    username=self.generate_staff_id(),
+                    email=self.email,
+                    role=User.Role.STAFF,
+                    first_name=self.first_name,
+                    last_name=self.last_name
+                )
+                user.set_password(settings.DEFAULT_STAFF_PASSWORD)
+                user.save()
+                self.user = user
+            self.staff_id = self.user.username
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"

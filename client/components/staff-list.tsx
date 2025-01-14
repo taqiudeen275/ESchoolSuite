@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useApi, useApiClient } from "nextjs-django-sdk";
@@ -105,7 +106,7 @@ const StaffList = () => {
   } = useApi<Staff[]>(
     `/api/staff/?page=${currentPage}&page_size=${pageSize}&search=${
       searchFilter || ""
-    }&user__role=${roleFilter || ""}&gender=${genderFilter || ""}®ion=${
+    }&user__role=${roleFilter || ""}&gender=${genderFilter || ""}&region  =${
       regionFilter || ""
     }&qualification=${qualificationFilter || ""}&date_joined=${
       dateJoinedFilter || ""
@@ -174,7 +175,7 @@ const StaffList = () => {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">Staff/Teacher List</h2>
-        <Link href={"/admin/staff/create"}>
+        <Link href={"/dashboard/admin/staff/create"}>
           <Button>
             <User className="mr-2 h-4 w-4" />
             Create New Staff
@@ -249,10 +250,10 @@ const StaffList = () => {
           <SelectContent>
             <SelectItem value=" ">All</SelectItem>
             <SelectItem value="Bachelor's Degree">
-              Bachelor's Degree
+              Bachelor&apos;s Degree
             </SelectItem>
-            <SelectItem value="Master's Degree">Master's Degree</SelectItem>
-            <SelectItem value="Bachelor's Degree">Bachelor's Degree</SelectItem>
+            <SelectItem value="Master's Degree">Master&apos;s Degree</SelectItem>
+            <SelectItem value="Bachelor's Degree">Bachelor&apos;s Degree</SelectItem>
             {/* Add other qualifications as needed */}
           </SelectContent>
         </Select>
