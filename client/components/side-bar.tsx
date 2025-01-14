@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { Home, MessageCircle, Users } from "lucide-react";
+import { Banknote, Home, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -25,6 +25,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen }) => {
       name: "Staffs",
       href: "staff",
       icon: <Users className="h-4 w-4" />,
+    },
+    {
+      name: "Payroll",
+      href: "payroll",
+      icon: <Banknote className="h-4 w-4" />,
     },
     // Add more sidebar items here
   ];

@@ -7,6 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import Link from "next/link";
+import { Button } from "./ui/button";
 
 interface StaffDetailsProps {
   staffData: {
@@ -149,6 +151,7 @@ const StaffDetails = ({ staffData }: StaffDetailsProps) => {
             </div>
           </dl>
         </div>
+        
       </CardContent>
     </Card>
   );

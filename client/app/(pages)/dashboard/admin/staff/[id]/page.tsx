@@ -56,7 +56,6 @@ async function fetchStaffDetails(
     if (!response) {
       return null; // Handle 404 Not Found
     }
-    console.log('Response', response);
 
     const data = await response;
 

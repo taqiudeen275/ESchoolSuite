@@ -13,7 +13,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, use } from "react";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, MoreHorizontal, Send, User } from "lucide-react";
+import { AlertCircle, Edit, Eye, MoreHorizontal, Send, Trash, User } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +44,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
 
 // Define Zod schema for Staff
 const staffSchema = z.object({
@@ -82,7 +95,7 @@ type Staff = z.infer<typeof staffSchema>;
 
 const StaffList = () => {
   const [currentPage, setCurrentPage] = useState(1);
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const [searchFilter, setSearchFilter] = useState<string | undefined>(
     undefined
@@ -98,18 +111,17 @@ const StaffList = () => {
   >(undefined);
 
   const apiClient = useApiClient();
+  const router = useRouter()
+
   const {
     data: staffList,
     error,
     isLoading,
     mutate,
   } = useApi<Staff[]>(
-    `/api/staff/?page=${currentPage}&page_size=${pageSize}&search=${
-      searchFilter || ""
-    }&user__role=${roleFilter || ""}&gender=${genderFilter || ""}&region  =${
-      regionFilter || ""
-    }&qualification=${qualificationFilter || ""}&date_joined=${
-      dateJoinedFilter || ""
+    `/api/staff/?page=${currentPage}&page_size=${pageSize}&search=${searchFilter || ""
+    }&user__role=${roleFilter || ""}&gender=${genderFilter || ""}&region  =${regionFilter || ""
+    }&qualification=${qualificationFilter || ""}&date_joined=${dateJoinedFilter || ""
     }`,
     apiClient
   );
@@ -151,6 +163,27 @@ const StaffList = () => {
     }
     setCurrentPage(1); // Reset to the first page when changing filters
   };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await apiClient.fetch(`/api/staff/${id}/`, {
+        method: "DELETE",
+      });
+      // Trigger a revalidation to update the list after deletion
+      mutate();
+      toast({
+        title: "Success",
+        description: "Staff deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting staff:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Error deleting staff",
+      });
+    }
+  };
+
 
   const handleSearchChange = (value: string | undefined) => {
     setSearchFilter(value);
@@ -253,7 +286,8 @@ const StaffList = () => {
               Bachelor&apos;s Degree
             </SelectItem>
             <SelectItem value="Master's Degree">Master&apos;s Degree</SelectItem>
-            <SelectItem value="Bachelor's Degree">Bachelor&apos;s Degree</SelectItem>
+            <SelectItem value="Diploma">Diploma</SelectItem>
+            <SelectItem value="Hnd">HND</SelectItem>
             {/* Add other qualifications as needed */}
           </SelectContent>
         </Select>
@@ -303,11 +337,47 @@ const StaffList = () => {
                 <TableCell>{staff.email}</TableCell>
                 <TableCell>{staff.phone_number}</TableCell>
                 <TableCell>
-                  <Link href={`/dashboard/admin/staff/${staff.id}`}>
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
-                  </Link>
+                <AlertDialog>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem className="cursor-pointer" onClick={()=> router.push(`staff/edit/${staff.id}`)}><Edit/> Edit</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="cursor-pointer" onClick={()=> router.push(`staff/${staff.id}`)}><Eye/> View</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem className="text-red-500 focus:bg-red-50 focus:text-red-900">
+                              <Trash/> Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Are you absolutely sure?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete the staff.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(staff.id)}
+                          >
+                            Continue
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                 </TableCell>
               </TableRow>
             ))
