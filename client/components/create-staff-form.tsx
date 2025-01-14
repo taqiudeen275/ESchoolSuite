@@ -151,7 +151,7 @@ const CreateStaffForm = () => {
           description: "Staff member created successfully.",
         });
         form.reset();
-        router.push("/admin/staff"); // Redirect to the staff list
+        router.push("/dashboard/admin/staff"); // Redirect to the staff list
       } else {
         const errorData = await staffResponse;
         toast({

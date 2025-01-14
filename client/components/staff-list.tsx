@@ -303,7 +303,7 @@ const StaffList = () => {
                 <TableCell>{staff.email}</TableCell>
                 <TableCell>{staff.phone_number}</TableCell>
                 <TableCell>
-                  <Link href={`/admin/staff/${staff.id}`}>
+                  <Link href={`/dashboard/admin/staff/${staff.id}`}>
                     <Button variant="outline" size="sm">
                       View
                     </Button>
