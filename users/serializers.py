@@ -40,7 +40,7 @@ class UserRegisterationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name')
+        fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name', 'role')
         extra_kwargs = {
             'first_name': {'required': True},
             'last_name': {'required': True}
@@ -56,14 +56,18 @@ class UserRegisterationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Remove password2 from the data as it's not needed for user creation
         validated_data.pop('password2')
-        
+        print(validated_data)
+        print(validated_data)
+        print("========================")
         # Create user instance but don't save to DB yet
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
-            password=validated_data['password']  # create_user handles password hashing
+            password=validated_data['password'],# create_user handles password hashing
+            role=validated_data['role']
+        # create_user handles password hashing
         )
         
         return user
@@ -78,10 +82,17 @@ class UserStudentProfileSerializer(serializers.ModelSerializer):
         model = Student
         fields = ['student_id', 'first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender', 'address', 'city', 'region', 'nationality', 'email', 'phone_number', 'admission_number', 'admission_date', 'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship', 'medical_conditions', 'allergies', 'previous_school_name', 'previous_school_address', 'previous_school_contact', 'religion', 'denomination']
 
+
+class StaffUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+
 class UserStaffProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Staff
-        fields = ['staff_id', 'first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender', 'address', 'city', 'region', 'nationality', 'email', 'phone_number', 'qualification', 'experience', 'date_joined', 'social_security_number', 'bank_name', 'bank_account_number', 'bank_branch']
+        fields = ['staff_id', 'first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender', 'address', 'city', 'region', 'nationality', 'email', 'phone_number', 'qualification', 'experience', 'date_joined', 'social_security_number', 'bank_name', 'bank_account_number', 'bank_branch', 'salary']
+
 
 class UserWithProfileSerializer(serializers.ModelSerializer):
     student_profile = UserStudentProfileSerializer(read_only=True)
@@ -98,11 +109,7 @@ class StudentUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_picture']
 
-class StaffUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_picture']
-        
+
 
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -122,7 +129,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'password', 'role', 'first_name', 'last_name', 'profile_picture', 'date_of_birth', 'gender', 'address', 'city', 'region', 'nationality', 'phone_number', 'is_active', 'is_staff', 'is_superuser']
 
     def create(self, validated_data):
-        role = validated_data.pop('role')  # Remove role from validated_data
+        role = validated_data.remove('role')  # Remove role from validated_data
         date_of_birth = validated_data.pop('date_of_birth', None)
         gender = validated_data.pop('gender', None)
         address = validated_data.pop('address', None)
