@@ -1,12 +1,9 @@
-import StaffPayrollList from "@/components/staff-payroll-list";
-import React from "react";
+import PayrollList from "@/components/payroll-list";
 
-const PayrollPage = () => {
+export default function PayrollPage() {
   return (
     <div className="p-6">
-      <StaffPayrollList />
+      <PayrollList />
     </div>
   );
-};
-
-export default PayrollPage;
+}
