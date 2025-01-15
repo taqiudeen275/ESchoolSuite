@@ -177,9 +177,6 @@ const PayrollList = () => {
  
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Payroll</h2>
-      </div>
       {/* Filtering Controls */}
       <div className="flex items-center gap-4 mb-4">
         {/* Status Filter */}
