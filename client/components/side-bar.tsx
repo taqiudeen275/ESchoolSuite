@@ -31,6 +31,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen }) => {
       href: "payroll",
       icon: <Banknote className="h-4 w-4" />,
     },
+    {
+      name: "Students",
+      href: "/admin/students",
+      icon: <Users className="h-4 w-4" />,
+    },
     // Add more sidebar items here
   ];
   return (
