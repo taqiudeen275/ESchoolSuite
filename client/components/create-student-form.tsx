@@ -158,7 +158,7 @@ const CreateStudentForm = () => {
       const userData = await userResponse.json();
 
       // Then create the parent
-      const parentResponse = await apiClient.fetch("/api/users/parents/", {
+      const parentResponse:any = await apiClient.fetch("/api/users/parents/", {
         method: "POST",
         body: JSON.stringify({
           user: userData.id,
@@ -185,7 +185,7 @@ const CreateStudentForm = () => {
       const parentData = await parentResponse.json();
 
       // Then create the student profile
-      const studentResponse = await apiClient.fetch("/api/students/", {
+      const studentResponse:any = await apiClient.fetch("/api/students/", {
         method: "POST",
         body: JSON.stringify({
           user: userData.id,
