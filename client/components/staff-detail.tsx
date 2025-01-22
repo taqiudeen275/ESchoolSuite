@@ -7,16 +7,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import Link from "next/link";
+import { Button } from "./ui/button";
 
-interface StaffProfileProps {
+interface StaffDetailsProps {
   staffData: {
-    user: {
-      first_name: string;
-      last_name: string;
-      middle_name?: string | null;
-      email: string;
-      profile_picture: string | null;
-    };
+    user: number;
+    first_name: string;
+    last_name: string;
+    middle_name?: string | null;
+    email: string;
     staff_id: string;
     date_of_birth: string;
     gender: string;
@@ -36,7 +36,7 @@ interface StaffProfileProps {
   };
 }
 
-const StaffProfile = ({ staffData }: StaffProfileProps) => {
+const StaffDetails = ({ staffData }: StaffDetailsProps) => {
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`;
   };
@@ -46,15 +46,15 @@ const StaffProfile = ({ staffData }: StaffProfileProps) => {
       <CardHeader>
         <div className="flex items-center">
           <Avatar className="h-20 w-20">
-            <AvatarImage src={staffData.user.profile_picture || ""} />
+            <AvatarImage src="" />
             <AvatarFallback>
-              {getInitials(staffData.user.first_name, staffData.user.last_name)}
+              {getInitials(staffData.first_name, staffData.last_name)}
             </AvatarFallback>
           </Avatar>
           <div className="ml-4">
             <CardTitle className="text-2xl flex items-center">
-              {staffData.user.first_name} {staffData.user.middle_name}{" "}
-              {staffData.user.last_name}{" "}
+              {staffData.first_name} {staffData.middle_name}{" "}
+              {staffData.last_name}{" "}
               <Badge variant="secondary" className="ml-2">
                 {/* You can customize the badge based on staff role or status */}
                 {staffData.staff_id}
@@ -96,7 +96,7 @@ const StaffProfile = ({ staffData }: StaffProfileProps) => {
             </div>
             <div>
               <dt className="font-semibold">Email:</dt>
-              <dd>{staffData.user.email}</dd>
+              <dd>{staffData.email}</dd>
             </div>
             <div>
               <dt className="font-semibold">Nationality:</dt>
@@ -151,9 +151,10 @@ const StaffProfile = ({ staffData }: StaffProfileProps) => {
             </div>
           </dl>
         </div>
+        
       </CardContent>
     </Card>
   );
 };
 
-export default StaffProfile;
+export default StaffDetails;

@@ -1,30 +1,15 @@
 // app/admin/staff/[id]/page.tsx
 import { createServerAction, useAuth } from "nextjs-django-sdk";
 import { z } from "zod";
-import StaffProfile from "@/components/staff-profile";
+import StaffDetails from "@/components/staff-detail";
 import { notFound } from 'next/navigation'
 import { cookies } from "next/headers";
+import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
 
 // Define Zod schema for Staff
 const staffSchema = z.object({
-  user: z.object({
-    id: z.number(),
-    username: z.string(),
-    email: z.string(),
-    first_name: z.string(),
-    last_name: z.string(),
-    profile_picture: z.string().nullable(),
-    role: z.enum([
-      "ADMIN",
-      "TEACHER",
-      "STUDENT",
-      "PARENT",
-      "STAFF",
-      "ACCOUNTANT",
-      "LIBRARIAN",
-      "COUNSELOR"
-    ]),
-  }),
+  user: z.number(),
   staff_id: z.string(),
   first_name: z.string(),
   last_name: z.string(),
@@ -88,26 +73,30 @@ async function fetchStaffDetails(
   }
 }
 
-export default async function StaffProfilePage({
+export default async function StaffDetailsPage({
   params,
 }: {
   params: { id: string };
 }) {
   const id = parseInt(params.id);
-  const serverAccessToken =  (await cookies()).get('access_token')?.value;
+  const serverAccessToken = (await cookies()).get('access_token')?.value;
 
   const staffData = await fetchStaffDetails(id, serverAccessToken);
 
-  console.log(staffData);
-  
+
   if (!staffData) {
     notFound();
   }
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Staff Profile</h2>
-      <StaffProfile staff={staffData} />
+      <div className="flex items-center gap-3 mb-6">
+        <Link href="/dashboard/admin/staff">
+          <ChevronLeft size={28} className="text-gray-600 hover:text-gray-800" />
+        </Link>
+        <h2 className="text-2xl font-bold">Staff Details</h2>
+      </div>
+      <StaffDetails staffData={staffData} />
     </div>
   );
 }
