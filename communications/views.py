@@ -30,7 +30,7 @@ class MessageListCreateView(generics.ListCreateAPIView):
         elif user.role == User.Role.PARENT:
             return Message.objects.filter(models.Q(sender=user) | models.Q(recipient=user, student__in=user.parent_profile.children.all()))
         else:
-            return Message.objects.none()
+            return Message.objects.none()       
 
     def perform_create(self, serializer):
         recipient_id = self.request.data.get('recipient')
